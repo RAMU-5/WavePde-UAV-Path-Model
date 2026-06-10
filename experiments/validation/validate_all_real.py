@@ -29,7 +29,7 @@ from pathlib import Path
 
 os.environ.setdefault("JAX_PLATFORMS", "cpu")
 THIS_DIR = Path(__file__).resolve().parent
-os.environ.setdefault("JAX_COMPILATION_CACHE_DIR", str(THIS_DIR.parent / "_jax_cache"))
+os.environ.setdefault("JAX_COMPILATION_CACHE_DIR", str(THIS_DIR.parents[1] / "_jax_cache"))
 
 import numpy as np
 import jax
@@ -40,7 +40,7 @@ from jax import jit
 sys.path.insert(0, str(THIS_DIR))
 import sys as _sys
 from pathlib import Path as _P
-_sys.path.insert(0, str(_P(__file__).resolve().parents[1] / "model"))
+_sys.path.insert(0, str(_P(__file__).resolve().parents[2] / "model"))
 from solve_all import (build_static_fields, build_static_fields_param,
                        gaussian_source, solve_one,
                        N_STEPS, C0, CZ_UP, CZ_DOWN, WIND, DT)
@@ -61,11 +61,11 @@ from uncertainty_diffusion import compute_uncertainty
 # --------------------------------------------------------------------- setup
 
 def setup():
-    z = np.load(THIS_DIR.parent / "input" / "domain.npz", allow_pickle=False)
+    z = np.load(THIS_DIR.parents[1] / "input" / "domain.npz", allow_pickle=False)
     mask_np = z["mask"]
     dx, dy, dz = float(z["dx"]), float(z["dy"]), float(z["dz"])
     stations = z["stations_xy_m"]
-    pf = np.load(THIS_DIR.parent / "output" / "wave" / "pair_matrix.npz", allow_pickle=False)
+    pf = np.load(THIS_DIR.parents[1] / "output" / "wave" / "pair_matrix.npz", allow_pickle=False)
     Tfwd = pf["T_matrix"]   # (118, 118)
 
     mask = jnp.asarray(mask_np)
@@ -474,7 +474,7 @@ def main():
     print(f"  per-check memory limit: 1 GB (login node cgroup)")
     print()
 
-    venv_py = Path(THIS_DIR.parent / "venv" / "bin" / "python")
+    venv_py = Path(THIS_DIR.parents[1] / "venv" / "bin" / "python")
     if not venv_py.exists():
         venv_py = Path(sys.executable)
     print(f"  using python: {venv_py}")

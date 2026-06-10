@@ -14,7 +14,7 @@ import numpy as np
 from PIL import Image
 from scipy import ndimage as ndi
 
-SRC = Path(__file__).resolve().parent / "nanshan"
+SRC = Path(__file__).resolve().parents[2] / ".cache" / "shenzhen-osm" / "nanshan"
 IN_NPZ = SRC / "raster_4m.npz"
 OUT_NPZ = SRC / "raster_4m_urban.npz"
 OUT_PNG = SRC / "raster_4m_urban_preview.png"

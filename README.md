@@ -24,12 +24,14 @@ output/        ALL generated artifacts (gitignored):
 scripts/       SLURM submit scripts + pipeline steps
                (build_domain → submit_array_5m → aggregate_pair_matrix → build_database)
 experiments/   paper experiments (exp1 UAV 3D, exp2 regional aircraft,
-               wavelength sweeps, SCALED wind coupling)
-validation/    correctness tests (reciprocity, linearity, multicolor
-               superposition, coupled iteration, real-domain checks)
-tools/         scheduling simulators + figure generators (visualize/{wave,routine,scheduling})
+               wavelength sweeps, SCALED wind coupling) +
+               validation/ — correctness tests (reciprocity, linearity,
+               multicolor superposition, coupled iteration, real-domain checks)
+tools/         scheduling simulators + figure generators
+               (visualize/{wave,routine,scheduling}) + osm/ — OSM ingestion /
+               voxelisation scripts (raw geodata lives in .cache/shenzhen-osm/,
+               not in git)
 aura/          FMM (Rander3 anisotropic eikonal) routing framework — baseline
-shenzhen-osm/  OSM ingestion / voxelisation for domain construction (raw data ignored)
 docs/          paper drafts + implementation notes + experiment plan
 venv/          Python env with jax[cuda12] (gitignored)
 ```
@@ -74,7 +76,7 @@ venv/bin/python scripts/aggregate_pair_matrix.py --domain domain_5m.npz \
 venv/bin/python scripts/build_database.py
 ```
 
-Quick correctness check (pure python, ~2 s): `python3 validation/back_sym_test.py`
+Quick correctness check (pure python, ~2 s): `python3 experiments/validation/back_sym_test.py`
 
 ## Validation caveats
 

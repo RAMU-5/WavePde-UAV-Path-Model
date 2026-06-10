@@ -21,7 +21,7 @@ from pathlib import Path
 
 import os
 _THIS = Path(__file__).resolve().parent
-_CACHE_DIR = str(_THIS.parent / "_jax_cache")
+_CACHE_DIR = str(_THIS.parents[1] / "_jax_cache")
 os.makedirs(_CACHE_DIR, exist_ok=True)
 os.environ.setdefault("JAX_COMPILATION_CACHE_DIR", _CACHE_DIR)
 
@@ -33,7 +33,7 @@ from jax import jit
 
 import sys as _sys
 from pathlib import Path as _P
-_sys.path.insert(0, str(_P(__file__).resolve().parents[1] / "model"))
+_sys.path.insert(0, str(_P(__file__).resolve().parents[2] / "model"))
 from solve_all import gaussian_source, solve_one, N_STEPS
 from solve_backward import build_backward_fields
 
@@ -60,7 +60,7 @@ def main():
     args = p.parse_args()
 
     print(f"[load] {args.domain}")
-    z = np.load(_THIS.parent / "input" / args.domain, allow_pickle=False)
+    z = np.load(_THIS.parents[1] / "input" / args.domain, allow_pickle=False)
     mask = z["mask"]
     dx, dy, dz = float(z["dx"]), float(z["dy"]), float(z["dz"])
     nx, ny, nz = mask.shape
@@ -69,7 +69,7 @@ def main():
 
     pair_path = Path(args.pair_file)
     if not pair_path.is_absolute():
-        pair_path = _THIS.parent / "output" / "wave" / pair_path
+        pair_path = _THIS.parents[1] / "output" / "wave" / pair_path
     if not pair_path.exists():
         raise SystemExit(f"missing {pair_path}: run solve_all.py first")
 

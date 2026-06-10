@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-SRC = Path(__file__).resolve().parent / "nanshan"
+SRC = Path(__file__).resolve().parents[2] / ".cache" / "shenzhen-osm" / "nanshan"
 IN_NPY = SRC / "geometry_64x4096x4096.npy"
 IN_NPZ = SRC / "raster_4m_4096.npz"
 

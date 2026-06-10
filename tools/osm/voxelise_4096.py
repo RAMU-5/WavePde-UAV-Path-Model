@@ -12,7 +12,7 @@ from pathlib import Path
 import numpy as np
 import time
 
-SRC = Path(__file__).resolve().parent / "nanshan"
+SRC = Path(__file__).resolve().parents[2] / ".cache" / "shenzhen-osm" / "nanshan"
 IN_NPZ = SRC / "raster_4m_4096.npz"
 OUT_NPY = SRC / "geometry_64x4096x4096.npy"
 DEPTH = 64

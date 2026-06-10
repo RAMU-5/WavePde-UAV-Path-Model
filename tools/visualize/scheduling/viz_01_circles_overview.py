@@ -21,7 +21,7 @@ from business_circles import (load_circles_with_stations, demand_profile,
 
 ROOT = Path(__file__).resolve().parent.parent.parent.parent
 DOMAIN = ROOT / "input" / "domain.npz"
-OSM_BUILDINGS = ROOT / "shenzhen-osm" / "nanshan" / "buildings.geojson"
+OSM_BUILDINGS = ROOT / ".cache" / "shenzhen-osm" / "nanshan" / "buildings.geojson"
 OUT_DIR = ROOT / "output" / "figures" / "scheduling_system"
 
 CIRCLE_COLORS = {

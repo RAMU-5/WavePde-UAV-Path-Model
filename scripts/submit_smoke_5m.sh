@@ -34,7 +34,7 @@ export XLA_PYTHON_CLIENT_PREALLOCATE=false
 export OMP_NUM_THREADS=8
 export MKL_NUM_THREADS=8
 
-$VENV/bin/python -u validation/smoke_5m.py --domain domain_5m.npz --src-idx 48
+$VENV/bin/python -u experiments/validation/smoke_5m.py --domain domain_5m.npz --src-idx 48
 
 echo "=== done ==="
 date

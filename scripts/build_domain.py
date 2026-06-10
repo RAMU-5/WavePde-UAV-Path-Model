@@ -20,7 +20,7 @@ from matplotlib.path import Path as MplPath
 from shapely.geometry import Polygon, box
 
 THIS_DIR = Path(__file__).resolve().parent
-OSM_BUILDINGS = THIS_DIR.parent / "shenzhen-osm" / "nanshan" / "buildings.geojson"
+OSM_BUILDINGS = THIS_DIR.parent / ".cache" / "shenzhen-osm" / "nanshan" / "buildings.geojson"
 STATIONS_JSON = THIS_DIR.parent / "input" / "stations.json"
 
 # Domain extent — exactly the bbox used to deploy the 118 stations.

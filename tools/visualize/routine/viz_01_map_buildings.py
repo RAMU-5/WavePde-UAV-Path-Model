@@ -13,8 +13,8 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import PolyCollection
 
 ROOT = Path(__file__).resolve().parent.parent.parent.parent
-OSM_BUILDINGS = ROOT / "shenzhen-osm" / "nanshan" / "buildings.geojson"
-OSM_ROADS = ROOT / "shenzhen-osm" / "nanshan" / "roads.geojson"
+OSM_BUILDINGS = ROOT / ".cache" / "shenzhen-osm" / "nanshan" / "buildings.geojson"
+OSM_ROADS = ROOT / ".cache" / "shenzhen-osm" / "nanshan" / "roads.geojson"
 DOMAIN = ROOT / "input" / "domain.npz"
 OUT = ROOT / "output" / "figures" / "routine_system" / "01_map_buildings.png"
 

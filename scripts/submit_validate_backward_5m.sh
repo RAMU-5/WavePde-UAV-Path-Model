@@ -27,7 +27,7 @@ export XLA_PYTHON_CLIENT_PREALLOCATE=false
 export OMP_NUM_THREADS=8
 export MKL_NUM_THREADS=8
 
-$VENV/bin/python -u validation/validate_backward_real.py \
+$VENV/bin/python -u experiments/validation/validate_backward_real.py \
     --domain domain_5m.npz \
     --pair-file pair_matrix_5m.npz \
     --n-pairs 6 \

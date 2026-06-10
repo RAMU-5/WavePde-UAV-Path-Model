@@ -14,7 +14,7 @@ from pathlib import Path
 import numpy as np
 import time
 
-SRC = Path(__file__).resolve().parent / "nanshan"
+SRC = Path(__file__).resolve().parents[2] / ".cache" / "shenzhen-osm" / "nanshan"
 IN_NPZ = SRC / "raster_4m_4096.npz"
 OUT_DIR = Path(
     "/leonardo_scratch/large/userexternal/yli00001/SCALED_Project/"

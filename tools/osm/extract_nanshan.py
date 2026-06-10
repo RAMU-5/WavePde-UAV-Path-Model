@@ -7,7 +7,7 @@ from pathlib import Path
 import geopandas as gpd
 import osm2geojson
 
-SRC = Path.home() / "shenzhen-osm"
+SRC = Path(__file__).resolve().parents[2] / ".cache" / "shenzhen-osm"
 OUT = SRC / "nanshan"
 OUT.mkdir(exist_ok=True)
 

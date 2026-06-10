@@ -10,7 +10,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-SRC = Path(__file__).resolve().parent / "nanshan"
+SRC = Path(__file__).resolve().parents[2] / ".cache" / "shenzhen-osm" / "nanshan"
 IN_NPZ = SRC / "raster_4m.npz"
 OUT_NPZ = SRC / "raster_4m_4096.npz"
 OUT_PNG = SRC / "raster_4m_4096_preview.png"

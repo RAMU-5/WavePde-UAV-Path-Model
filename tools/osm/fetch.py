@@ -7,7 +7,7 @@ from pathlib import Path
 
 import osm2geojson
 
-OUT_DIR = Path.home() / "shenzhen-osm"
+OUT_DIR = Path(__file__).resolve().parents[2] / ".cache" / "shenzhen-osm"
 OUT_DIR.mkdir(exist_ok=True)
 
 SHENZHEN_REL_ID = 3464353

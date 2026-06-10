@@ -25,7 +25,7 @@ Status legend: ✅ done · 🔶 partial (code exists, needs systematic runs/figu
 
 | ID | Check | Status |
 |----|-------|--------|
-| T0.1 | Reciprocity q=0 and uniform q (`validation/back_sym_test.py`, 5/5 exact) | ✅ |
+| T0.1 | Reciprocity q=0 and uniform q (`experiments/validation/back_sym_test.py`, 5/5 exact) | ✅ |
 | T0.2 | Broadband linearity ψ_bb = ψ_long + ψ_short | ✅ |
 | T0.3 | Multicolor batching = superposition of single solves | ✅ |
 | T0.4 | Real-domain forward-vs-backward pairs (`validate_backward_real.py`) | ✅ |

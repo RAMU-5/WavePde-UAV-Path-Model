@@ -40,7 +40,7 @@ from PIL import Image
 from shapely.geometry import shape
 from shapely.ops import unary_union
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[2] / ".cache" / "shenzhen-osm"
 SRC = ROOT / "nanshan"
 OUT_NPZ = SRC / "raster_4m.npz"
 OUT_PNG = SRC / "raster_4m_preview.png"

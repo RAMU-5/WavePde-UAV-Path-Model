@@ -10,14 +10,8 @@ _jax_cache/
 # --- all generated artifacts live under output/ ---
 output/
 
-# --- raw OSM geodata (re-fetch with shenzhen-osm/fetch.py) ---
-shenzhen-osm/*.geojson
-shenzhen-osm/nanshan/
-shenzhen-osm/*.html
-shenzhen-osm/*.png
-
-# --- separate git repo (cloned upstream) ---
-SCALED-UrbanFlowv3/
+# raw OSM geodata and the SCALED-UrbanFlowv3 clone live under .cache/
+# (ignored above); re-fetch geodata with tools/osm/fetch.py
 
 # --- claude session state ---
 memory/

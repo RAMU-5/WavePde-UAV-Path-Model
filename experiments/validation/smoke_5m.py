@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 
 THIS_DIR = Path(__file__).resolve().parent
-os.environ.setdefault("JAX_COMPILATION_CACHE_DIR", str(THIS_DIR.parent / "_jax_cache"))
+os.environ.setdefault("JAX_COMPILATION_CACHE_DIR", str(THIS_DIR.parents[1] / "_jax_cache"))
 os.environ.setdefault("XLA_PYTHON_CLIENT_MEM_FRACTION", "0.50")
 os.environ.setdefault("XLA_PYTHON_CLIENT_PREALLOCATE", "false")
 
@@ -24,7 +24,7 @@ from jax import jit
 
 import sys as _sys
 from pathlib import Path as _P
-_sys.path.insert(0, str(_P(__file__).resolve().parents[1] / "model"))
+_sys.path.insert(0, str(_P(__file__).resolve().parents[2] / "model"))
 from solve_all import (build_static_fields, gaussian_source, solve_one,
                        N_STEPS)
 
@@ -41,7 +41,7 @@ def main():
     print(f"[smoke] backend:     {jax.default_backend()}")
 
     t_load = time.time()
-    z = np.load(THIS_DIR.parent / "input" / args.domain, allow_pickle=False)
+    z = np.load(THIS_DIR.parents[1] / "input" / args.domain, allow_pickle=False)
     mask_np = z["mask"]
     dx, dy, dz = float(z["dx"]), float(z["dy"]), float(z["dz"])
     nx, ny, nz = mask_np.shape
@@ -106,7 +106,7 @@ def main():
               f"min {T_other.min():.1f}s, max {T_other.max():.1f}s, "
               f"mean {T_other.mean():.1f}s")
 
-    out_dir = THIS_DIR.parent / "output" / "wave"
+    out_dir = THIS_DIR.parents[1] / "output" / "wave"
     out_dir.mkdir(exist_ok=True)
     np.savez_compressed(out_dir / args.out, T_field=T_np.astype(np.float32),
                         T_at_stations=T_row.astype(np.float32),

@@ -5,7 +5,7 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 from shapely.geometry import shape
 
-DIR = Path.home() / "shenzhen-osm"
+DIR = Path(__file__).resolve().parents[2] / ".cache" / "shenzhen-osm"
 
 
 def load(name):
