@@ -13,6 +13,8 @@ regional aircraft (80 km domains).
 ```
 model/         the method — PDE solvers (one leapfrog kernel in solve_all.py;
                backward/broadband/multicolor/coupled variants import it),
+               wave_api.py (WaveConfig parameterised API) + plan.py
+               (one-call plan_path) + path_trace.py (-∇T streamlines),
                UAV dynamics, wind inversion, mean-field scheduler
 input/         domain voxel masks + stations (domain.npz 50 m, domain_5m.npz 5 m,
                stations.json); rebuild with scripts/build_domain.py
@@ -26,7 +28,6 @@ experiments/   paper experiments (exp1 UAV 3D, exp2 regional aircraft,
 validation/    correctness tests (reciprocity, linearity, multicolor
                superposition, coupled iteration, real-domain checks)
 tools/         scheduling simulators + figure generators (visualize/{wave,routine,scheduling})
-routine/       library form of the solver (WaveConfig dataclass API)
 aura/          FMM (Rander3 anisotropic eikonal) routing framework — baseline
 shenzhen-osm/  OSM ingestion / voxelisation for domain construction (raw data ignored)
 docs/          paper drafts + implementation notes + experiment plan
@@ -46,8 +47,18 @@ venv/          Python env with jax[cuda12] (gitignored)
 | `uav_dynamics.py` | Point-mass UAV dynamics integration | 2.10 |
 | `wind_inversion.py` | Kinematic wind estimation from flight tracks | 2.6.2 |
 | `scheduler_meanfield.py` | Mean-field task assignment (vs Hungarian/greedy) | sched |
+| `wave_api.py` | `WaveConfig`-parameterised API over the same kernel (`solve_forward`/`solve_backward`) | lib |
+| `plan.py` + `path_trace.py` | One-call `plan_path`: solve → trace −∇T streamline → smooth | lib |
 
-There is exactly one implementation of the PDE step; every variant imports it.
+There is exactly one implementation of the PDE step; every variant and
+the API layer import it from `solve_all.py`. Library quick start:
+
+```python
+import sys; sys.path.insert(0, "<root>/model")
+from plan import plan_path
+res = plan_path(mask, dx, dy, dz, src_xyz, dst_xyz)
+print(res.travel_time, res.status)
+```
 
 ## Typical workflow
 

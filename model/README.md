@@ -23,5 +23,11 @@ Conventions shared by every script here:
 - scripts outside `model/` import these modules via
   `sys.path.insert(0, <root>/model)`
 
-The parameterised library form (WaveConfig dataclass, no hard-coded
-constants) is `../routine/wave.py`.
+The parameterised library form lives here too: `wave_api.py` (WaveConfig
+dataclass over the same kernel, `solve_forward`/`solve_backward`),
+`path_trace.py` (−∇T streamline tracing) and `plan.py` (one-call
+`plan_path`). The former standalone `routine/` package was merged into
+these files — its duplicated kernel carried a real bug (`solve_backward`
+did not flip the climb/descend asymmetry w_grav, 43% reciprocity error
+on a vertical test pair), fixed by construction now that the adjoint
+flips the full advection field of the single kernel.

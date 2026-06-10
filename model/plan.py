@@ -5,9 +5,10 @@
     1. Build static wave fields (or reuse a cached `StaticFields`).
     2. Snap source / destination to integer cell indices, nudging out
        of any building cell horizontally then vertically.
-    3. Solve the convected wave PDE from the source (`routine.wave`).
+    3. Solve the convected wave PDE from the source (`wave_api`, which
+       wraps the single kernel in `solve_all`).
     4. Trace the optimal path back from destination via gradient descent
-       on T (`routine.path`).
+       on T (`path_trace`).
     5. Read off the travel time at the destination cell.
 
 Returns a `PathResult` with the path, travel time, status string, and
@@ -19,13 +20,13 @@ from typing import Optional, Tuple, Literal
 
 import numpy as np
 
-from .wave import (
+from wave_api import (
     WaveConfig,
     StaticFields,
     build_static_fields,
     solve_forward,
 )
-from .path import (
+from path_trace import (
     trace_path_3d,
     build_three_phase_path,
     smooth_path,

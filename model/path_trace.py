@@ -1,6 +1,6 @@
 """Path tracing on a wave-equation arrival-time field T(x,y,z).
 
-Given a precomputed T from `routine.wave.solve_forward`, the optimal
+Given a precomputed T from `wave_api.solve_forward`, the optimal
 path from source to destination follows the integral curve of `-∇T`.
 We trace numerically by streamline (Euler) gradient descent starting at
 the destination, until we reach the source cell.

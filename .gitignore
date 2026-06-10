@@ -1,5 +1,6 @@
 # --- environments & caches ---
 venv/
+.cache/
 __pycache__/
 *.pyc
 _jax_cache/

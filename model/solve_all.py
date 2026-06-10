@@ -86,10 +86,16 @@ def adv(qx, qy, qz, psi, dx, dy, dz):
 # ---- Spatial fields (built once, reused across sources) ---------------
 
 def build_static_fields_param(mask, dx, dy, dz,
-                              c0=C0, cz_up=CZ_UP, cz_down=CZ_DOWN, wind=WIND):
+                              c0=C0, cz_up=CZ_UP, cz_down=CZ_DOWN, wind=WIND,
+                              sponge_layers=SPONGE_LAYERS,
+                              sponge_strength=SPONGE_STRENGTH,
+                              reg_z_low=REG_Z_LOW, reg_z_full=REG_Z_FULL,
+                              reg_low_factor=REG_LOW_FACTOR):
     """Parameterised version that lets the caller override the UAV speeds
     and wind (used by the coupling-iteration solver — paper §2.10 — which
-    updates c0/cz_up/cz_down from observed dynamics each iteration)."""
+    updates c0/cz_up/cz_down from observed dynamics each iteration).
+    Defaults equal the module constants, so the no-arg path is numerically
+    identical to the original hard-coded build."""
     nx, ny, nz = mask.shape
     cz0 = 0.5 * (cz_up + cz_down)
     w_grav = 0.5 * (cz_down - cz_up)
@@ -97,11 +103,11 @@ def build_static_fields_param(mask, dx, dy, dz,
     # Regulatory profile (z-only)
     z_centers = (jnp.arange(nz) + 0.5) * dz
     reg = jnp.where(
-        z_centers >= REG_Z_FULL, 1.0,
-        jnp.where(z_centers < REG_Z_LOW, REG_LOW_FACTOR,
-                  REG_LOW_FACTOR + (1.0 - REG_LOW_FACTOR)
-                      * (z_centers - REG_Z_LOW)
-                      / max(1e-9, REG_Z_FULL - REG_Z_LOW)),
+        z_centers >= reg_z_full, 1.0,
+        jnp.where(z_centers < reg_z_low, reg_low_factor,
+                  reg_low_factor + (1.0 - reg_low_factor)
+                      * (z_centers - reg_z_low)
+                      / max(1e-9, reg_z_full - reg_z_low)),
     )[None, None, :]
 
     free = (~mask).astype(jnp.float32)
@@ -123,16 +129,16 @@ def build_static_fields_param(mask, dx, dy, dz,
     # Sponge (lateral + top only — let ground reflect freely)
     def edge_ramp(n):
         d = jnp.minimum(jnp.arange(n), n - 1 - jnp.arange(n))
-        return jnp.where(d < SPONGE_LAYERS,
-                         (1.0 - d / max(1, SPONGE_LAYERS - 1)) ** 2, 0.0)
+        return jnp.where(d < sponge_layers,
+                         (1.0 - d / max(1, sponge_layers - 1)) ** 2, 0.0)
     def top_only(n):
         d = n - 1 - jnp.arange(n)
-        return jnp.where(d < SPONGE_LAYERS,
-                         (1.0 - d / max(1, SPONGE_LAYERS - 1)) ** 2, 0.0)
+        return jnp.where(d < sponge_layers,
+                         (1.0 - d / max(1, sponge_layers - 1)) ** 2, 0.0)
     rx = edge_ramp(nx)[:, None, None]
     ry = edge_ramp(ny)[None, :, None]
     rz = top_only(nz)[None, None, :]
-    damp = SPONGE_STRENGTH * jnp.maximum(jnp.maximum(rx, ry), rz)
+    damp = sponge_strength * jnp.maximum(jnp.maximum(rx, ry), rz)
 
     return dict(c2_xy=c2_xy, c2_z=c2_z, u=u, v=v, w=w,
                 ax=ax, ay=ay, az=az, damp=damp, free=free)
@@ -148,17 +154,19 @@ def build_static_fields(mask, dx, dy, dz):
 # ---- Per-source solve --------------------------------------------------
 
 def step_kernel(carry, n, c2_xy, c2_z, u, v, w, ax_f, ay_f, az_f,
-                one_minus_damp, free, dx, dy, dz):
+                one_minus_damp, free, dx, dy, dz,
+                dt=DT, pulse_t0_steps=PULSE_T0_STEPS,
+                pulse_tau_steps=PULSE_TAU_STEPS, min_peak_amp=MIN_PEAK_AMP):
     psi_prev, psi_curr, amp_prev, was_rising, T, src_spatial = carry
-    t = n.astype(jnp.float32) * DT
-    pulse_t0 = PULSE_T0_STEPS * DT
-    pulse_tau = PULSE_TAU_STEPS * DT
-    dt2 = jnp.float32(DT * DT)
+    t = n.astype(jnp.float32) * dt
+    pulse_t0 = pulse_t0_steps * dt
+    pulse_tau = pulse_tau_steps * dt
+    dt2 = jnp.float32(dt * dt)
     diff = (lap_var_coef_axis(c2_xy, psi_curr, dx, 0)
             + lap_var_coef_axis(c2_xy, psi_curr, dy, 1)
             + lap_var_coef_axis(c2_z, psi_curr, dz, 2))
     src = src_spatial * jnp.exp(-0.5 * ((t - pulse_t0) / pulse_tau) ** 2)
-    psi_dot = (psi_curr - psi_prev) / DT
+    psi_dot = (psi_curr - psi_prev) / dt
     adv1 = adv(u, v, w, psi_dot, dx, dy, dz)
     qg = adv(u, v, w, psi_curr, dx, dy, dz)
     adv2 = adv(u, v, w, qg, dx, dy, dz)
@@ -179,8 +187,8 @@ def step_kernel(carry, n, c2_xy, c2_z, u, v, w, ax_f, ay_f, az_f,
     rising_now = amp > amp_prev
     peak_now = (was_rising & (~rising_now)
                 & jnp.isinf(T)
-                & (amp_prev > MIN_PEAK_AMP))
-    T_new = jnp.where(peak_now, t - DT, T)
+                & (amp_prev > min_peak_amp))
+    T_new = jnp.where(peak_now, t - dt, T)
     return (psi_curr, psi_next, amp, rising_now, T_new, src_spatial), None
 
 
@@ -195,9 +203,14 @@ def gaussian_source(shape, idx, sigma=SOURCE_SIGMA_CELLS):
 
 
 def solve_one(c2_xy, c2_z, u, v, w, ax_f, ay_f, az_f,
-              one_minus_damp, free, src_spatial, dx, dy, dz, n_steps):
+              one_minus_damp, free, src_spatial, dx, dy, dz, n_steps,
+              dt=DT, pulse_t0_steps=PULSE_T0_STEPS,
+              pulse_tau_steps=PULSE_TAU_STEPS, min_peak_amp=MIN_PEAK_AMP):
     """All-explicit-arg version: every dynamic dependency is a positional
-    arg. Closures are avoided so the JIT cache hits across sources."""
+    arg. Closures are avoided so the JIT cache hits across sources.
+    Trailing time/pulse parameters default to the module constants, so
+    existing positional call sites are numerically unchanged; wave_api.py
+    overrides them from a WaveConfig."""
     shape = src_spatial.shape
     init = (
         jnp.zeros(shape, dtype=jnp.float32),
@@ -210,7 +223,8 @@ def solve_one(c2_xy, c2_z, u, v, w, ax_f, ay_f, az_f,
     def step_fn(carry, n):
         return step_kernel(carry, n, c2_xy, c2_z, u, v, w,
                            ax_f, ay_f, az_f, one_minus_damp, free,
-                           dx, dy, dz)
+                           dx, dy, dz,
+                           dt, pulse_t0_steps, pulse_tau_steps, min_peak_amp)
     n_arr = jnp.arange(n_steps, dtype=jnp.int32)
     final, _ = lax.scan(step_fn, init, n_arr)
     return final[4]   # T field
