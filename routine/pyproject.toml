@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "routine"
+version = "0.1.0"
+description = "Neural-physics UAV path planner: convected-wave PDE + gradient-descent path tracing"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "Proprietary" }
+authors = [{ name = "Levistone" }]
+dependencies = [
+    "numpy>=1.22",
+    "scipy>=1.9",
+    "jax>=0.4",
+    "jaxlib>=0.4",
+]
+
+[project.optional-dependencies]
+cuda = ["jax[cuda12]>=0.4"]
+dev = ["pytest>=7"]
+
+[tool.setuptools]
+packages = ["routine"]
+package-dir = { "routine" = "." }

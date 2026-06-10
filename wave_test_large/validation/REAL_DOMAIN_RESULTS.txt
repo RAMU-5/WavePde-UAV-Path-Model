@@ -1,0 +1,95 @@
+validate_all_real (driver mode): spawning each check in a subprocess
+  per-check memory limit: 1 GB (login node cgroup)
+
+  using python: /leonardo_scratch/large/userexternal/yli00001/Aura_Project/Levistone/wave_test_large/venv/bin/python
+
+  spawning multicolor ...
+
+[#2 multicolor] real-domain 4-source batched vs 4 individual
+  chosen sources (corner stations): [18, 42, 72, 15]
+  probes (src, dst): [(18, 5), (42, 50), (72, 30), (15, 69)]
+  4 individual solves: 33.5s
+  1 batched solve:    8.6s (saved 3x on this color group)
+   src  dst    T_indep    T_batch     diff      rel
+    18    5      82.80      82.80     0.00   0.00%
+    42   50      87.50      87.50     0.00   0.00%
+    72   30      83.00      83.00     0.00   0.00%
+    15   69      81.70      81.70     0.00   0.00%
+  [PASS] mean rel error 0.00% (< 5%)
+
+RESULT multicolor: PASS
+  multicolor took 45.2s
+  spawning coupled ...
+
+[#3 coupled iteration] real-domain wave/dynamics fixed point
+  src=48 [3111.71130255 3561.1353        5.        ]  dst=1 [1814.95494324  988.9767        5.        ]
+  init cz_up=8.0  cz_down=5.0  c0=15.0
+  ran 5 iters in 41.7s
+  iter      c0   cz_up  cz_down   rel_chg   pathRMS
+     0  15.000   8.000    5.000    0.3963       inf
+     1  12.438   9.413    6.981    0.2332 47.0880209538254
+     2  12.550   7.281    5.353    0.0849 30.846786634420013
+     3  13.182   6.818    4.899    0.1232 89.53439228309215
+     4  13.260   7.471    5.502    0.0830 79.66848917874907
+  final params: c0=13.590 cz_up=6.925 cz_down=5.045
+  [PASS] cz_up moved 1.08 m/s; last rel_change 0.0830 < first 0.3963
+
+RESULT coupled: PASS
+  coupled took 45.1s
+  spawning broadband ...
+
+[#4 broadband] real-domain ψ_broadband == ψ_long + ψ_short (linearity)
+  long-only: 9.0s, finite cells 144930
+  short-only: 8.5s, finite cells 132050
+  broadband: 8.8s, finite cells 145050
+  coverage(T_B is finite where union(T_L,T_S) is): 100.00%
+  |T_B - min(T_L,T_S)|: median=0.100s p95=1.300s  (DT=0.1s)
+  [PASS] coverage > 98%, median diff < 2*DT, p95 < 30*DT
+
+RESULT broadband: PASS
+  broadband took 30.3s
+  spawning wind ...
+
+[#5 wind inversion] synthetic flight under known wind, real path
+  truth wind = [ 1.5 -0.8  0. ]
+  recovered first-segment = [ 1.5 -0.8  0. ]
+  max |err| over track = 1.297e-13
+  [PASS] expect zero (round-off only)
+
+RESULT wind: PASS
+  wind took 4.5s
+  spawning uncertainty ...
+
+[#11 uncertainty diffusion] D(t) along synthetic flight path
+  tau(60 s)  = 72.599 m^2
+  D mean     = 1.211 m^2/s
+  paper formula sigma = 2*sqrt(tau) = 17.041 m
+  3D RMS (correct)                 = 20.871 m
+  per-axis std                      = 12.050 m
+  [PASS] tau monotone non-decreasing and > 0
+
+RESULT uncertainty: PASS
+  uncertainty took 4.0s
+  spawning winged ...
+
+[#16 winged alignment] real-domain x* search on a real T-field
+  source station 48 at [3111.71130255 3561.1353        5.        ]
+  forward solve: 9.0s
+  launch=[3111.71130255 3561.1353        5.        ]  heading=[0.99729989 0.0734365  0.        ]
+  x_star = [3350. 3450.   28.]  score = 0.997
+  [PASS] score > 0.4 (alignment found)
+
+RESULT winged: PASS
+  winged took 12.1s
+
+==================================================
+REAL-DOMAIN VALIDATION SUMMARY
+==================================================
+  [PASS] #2 multicolor
+  [PASS] #3 coupled
+  [PASS] #4 broadband
+  [PASS] #5 wind
+  [PASS] #11 uncertainty
+  [PASS] #16 winged
+
+  6/6 features validated on real city domain

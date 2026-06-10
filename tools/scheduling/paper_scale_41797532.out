@@ -1,0 +1,29 @@
+=== Node ===
+lrdn0105.leonardo.local
+GPU 0: NVIDIA A100-SXM-64GB (UUID: GPU-b4331f22-9f8f-ab83-92a7-6a1988afd70f)
+
+=== Paper-scale sanity (small parity) ===
+Fast-path parity check (8x8):
+  t0: hungarian=17.46 full=17.91 fast=17.91
+  t1: hungarian=24.07 full=28.39 fast=28.39
+  t2: hungarian=21.77 full=21.77 fast=21.77
+  t3: hungarian=18.95 full=19.00 fast=18.95
+  t4: hungarian=26.20 full=27.91 fast=28.89
+
+=== Fast-path scaling check (huge sizes) ===
+           N×M      gpu/ms
+  1000×1000           82.2
+  3000×3000         1251.0
+  5000×3000          698.9
+  7000×5000         1660.7
+  7000×10000        2345.3
+
+=== Phase: paper-scale rolling sim (7080 UAV, 1h dinner peak) ===
+==========================================================================================
+PAPER-SCALE ROLLING SIM — 7080 UAV, 118 stations, 1h dinner peak
+Targets: paper Table 3 is 342498 orders / 4h = 85k orders/h average
+We run 1h window at 85k orders/h to test peak-hour dispatch behaviour
+==========================================================================================
+
+--- Target 60000 orders/h ---
+  [greedy  ] orders= 59944  compl=79.6%  wait=289.9s  deliv=554.2s  pkpend= 5451  util=80.9%  disp/ms=42.7  wall=5.6s

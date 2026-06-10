@@ -1,0 +1,30 @@
+# --- environments & caches ---
+venv/
+__pycache__/
+*.pyc
+_jax_cache/
+.ipynb_checkpoints/
+*.log
+
+# --- solver outputs & generated data (regenerable) ---
+wave_test_large/outputs/
+wave_test_large/slurm_logs/
+wave_test_large/jobs/logs/
+database/
+runs/
+visualization/
+
+# --- raw OSM geodata (re-fetch with shenzhen-osm/fetch.py) ---
+shenzhen-osm/*.geojson
+shenzhen-osm/nanshan/
+shenzhen-osm/*.html
+shenzhen-osm/*.png
+
+# --- separate git repo (cloned upstream) ---
+SCALED-UrbanFlowv3/
+
+# --- claude session state ---
+memory/
+.claude/settings.local.json
+
+# small npz INPUTS are tracked explicitly: wave_test_large/domain*.npz

@@ -1,0 +1,21 @@
+Traceback (most recent call last):
+  File "<string>", line 51, in <module>
+    k = run_simulation(cfg, disp, name, verbose=False)
+  File "/leonardo_work/EUHPC_D25_028/Levistone/tools/scheduling/rolling_sim.py", line 401, in run_simulation
+    assignments = dispatcher(
+        idle_ids, idle_stations,
+        pend_arr, pickups, custs, ages,
+        T_eff)
+  File "<string>", line 24, in dispatch_mf_gpu_fast
+    task_of_uav, _ = mf_hybrid_lsa_fast_t(Cext, lam_one=200.0, cfg=cfg)
+                     ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/EUHPC_D25_028/Levistone/tools/scheduling/mf_scheduler_torch.py", line 264, in mf_hybrid_lsa_fast_t
+    x_soft = mean_field_assignment_fast_t(C, lam_one=lam_one, cfg=cfg)
+  File "/leonardo_work/EUHPC_D25_028/Levistone/tools/scheduling/mf_scheduler_torch.py", line 244, in mean_field_assignment_fast_t
+    diff = float((x_new - x).abs().max().item())
+                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+RuntimeError: CUDA error: an illegal memory access was encountered
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+

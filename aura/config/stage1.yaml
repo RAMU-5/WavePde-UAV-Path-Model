@@ -1,0 +1,173 @@
+# Aura Stage 1 — Nanshan 20 km^2 transport-only configuration.
+# All numeric parameters live here. Any parameter referenced by code MUST be
+# present here so the YAML is the single source of truth for tuning.
+
+stage: 1
+name: "nanshan_transport_only_v1"
+seed: 20260502  # global RNG seed for reproducibility
+
+# ------------------------------------------------------------------ region
+region:
+  name: "nanshan_20km2"
+  # Nanshan District core, ~20 km^2 (~4.7 km E-W x ~4.0 km N-S).
+  # min_lon, min_lat, max_lon, max_lat in WGS84.
+  bbox_wgs84: [113.930, 22.535, 113.976, 22.571]
+  crs_projected: "EPSG:32650"  # UTM 50N for Shenzhen
+  z_min_m: 0.0
+  z_max_m: 120.0  # ceiling for FMM domain
+
+# ------------------------------------------------------------------ grid
+grid:
+  # 10 m horizontal, 5 m vertical -> ~2000 x 2000 x 24 over 20 km^2.
+  dx_m: 10.0
+  dy_m: 10.0
+  dz_m: 5.0
+
+# ------------------------------------------------------------------ wind
+wind:
+  source: "constant"  # "constant" | "scaled" (Stage 2)
+  constant:
+    u_mps: 3.0
+    v_mps: 0.0
+    w_mps: 0.0
+
+# ------------------------------------------------------------------ data sources
+data:
+  osm:
+    # null = pull live via osmnx; otherwise path to a saved graphml.
+    cache_path: null
+    network_type: "drive"
+    candidate_dedupe_radius_m: 80.0
+  footprints:
+    primary: "ms_global"  # "ms_global" | "osm"
+    ms_global_url_template: "https://minedbuildings.blob.core.windows.net/global-buildings/2024-04-09/global-buildings.csv.gz"
+    fallback_height_residential_m: 12.0
+    fallback_height_commercial_m: 30.0
+    height_per_level_m: 3.0
+  population:
+    primary: "worldpop"
+    worldpop_path: "/leonardo_scratch/large/userexternal/yli00001/Aura_Project/data/worldpop/chn_ppp_2020_UNadj.tif"
+    fallback: "landscan"
+    landscan_path: null
+
+# ------------------------------------------------------------------ network (L0)
+network:
+  n_stations: 100
+  candidate_pool_target: 5000
+  capacity:
+    population_per_unit: 5000
+    cap_min: 4
+    cap_max: 16
+  service_region: "nearest_station"  # Voronoi over the sim grid
+
+# ------------------------------------------------------------------ cost field
+cost:
+  v_cruise_mps: 15.0
+  alpha_noise: 0.0005
+  alpha_obstacle: 1.0e+6  # soft barrier inside building / no-fly mask
+  use_walls_flag: true    # AGD walls flag for hard mask termination
+
+# ------------------------------------------------------------------ FMM (L2)
+fmm:
+  backend: "agd_cuda"     # "agd_cuda" | "agd_cpu"
+  model: "Rander3"
+  z_floor_m: 30.0         # nominal cruise altitude floor
+  z_ceiling_m: 90.0       # nominal cruise altitude ceiling
+  trajectory_dt_s: 0.5
+  fp32: true
+  incremental:
+    affected_zone_buffer_m: 50.0
+    method: "affected_zone_resolve"  # vs "d_star_lite" (Stage 2)
+
+# ------------------------------------------------------------------ tube radius
+tube:
+  trunk_pct_top: 0.15  # top 15% demand pairs are "trunk"
+  eps_trunk_m: 8.0
+  eps_branch_m: 15.0
+  uncertainty_growth: 0.0  # SCALED-driven; Stage 1 = 0
+
+# ------------------------------------------------------------------ MPC (L3)
+mpc:
+  backend: "do_mpc"
+  horizon_n: 20
+  dt_s: 0.02              # 50 Hz
+  state_model: "point_mass_3d"
+  uav:
+    mass_kg: 1.5
+    drag_gamma: 0.6
+    u_max_n: 25.0
+    v_max_mps: 18.0
+  cost_weights:
+    Q_pos: 4.0
+    R_vel: 1.0
+    lam_u: 0.05
+    slack_tube: 1.0e+3
+
+# ------------------------------------------------------------------ ALNS (L0.5)
+assignment:
+  backend: "alns"
+  cadence_hz: 1.0
+  time_budget_ms: 200
+  battery:
+    capacity_wh: 90.0
+    consumption_per_meter_wh: 0.012
+    reserve_frac: 0.20
+    recharge_rate_wh_per_s: 0.5
+  station_slot:
+    launch_interval_s: 5.0
+    pads_per_station: null  # null = use station capacity from network/
+
+# ------------------------------------------------------------------ CBS (L4)
+cbs:
+  time_bin_s: 1.0
+  cell_inflation_factor: 1.0  # multiplier on tube eps when sweeping cells
+  delay_only: true
+  max_delay_s: 60.0
+
+# ------------------------------------------------------------------ sim
+sim:
+  duration_s: 1800.0   # 30 min demo
+  tick_s: 0.01
+  layers:
+    plant_hz: 100
+    mpc_hz: 50
+    cbs_hz: 10
+    alns_hz: 1
+    rebalance_hz: 0.01
+
+# ------------------------------------------------------------------ fleet
+fleet:
+  n_uavs: 200
+  initial_distribution: "by_capacity"  # round-robin proportional to station capacity
+
+# ------------------------------------------------------------------ missions
+missions:
+  delivery:
+    poisson_lambda_per_min: 50.0  # base rate, modulated by ToD + pop
+    deadline_horizon_s: 1800.0
+    package_kg_min: 0.2
+    package_kg_max: 2.0
+  passive_sensing:
+    enabled: true
+    sample_dt_s: 1.0
+    out_path: "runs/passive_log.ndjson"
+  hazard:
+    # Each hazard: (time_s, lon, lat, radius_m, tau_s)
+    schedule:
+      - {t_s: 600.0, lon: 113.945, lat: 22.545, radius_m: 250.0, tau_s: 600.0}
+      - {t_s: 900.0, lon: 113.965, lat: 22.560, radius_m: 200.0, tau_s: 450.0}
+      - {t_s: 1500.0, lon: 113.930, lat: 22.530, radius_m: 300.0, tau_s: 300.0}
+
+# ------------------------------------------------------------------ KPI / SLA
+kpi:
+  sla_pct_threshold: 0.95
+  energy_proxy: "headwind_corrected_path"
+  log_path: "runs/kpi.csv"
+  trajectory_db_path: "runs/traj_db.zarr"
+
+# ------------------------------------------------------------------ viz
+viz:
+  enabled: true
+  fps: 20
+  gif_path: "runs/aura_stage1_demo.gif"
+  panel_size_px: [1200, 800]
