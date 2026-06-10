@@ -9,7 +9,7 @@ Tests:
        N * d / sum(d).
 
 Run:
-    /leonardo_work/EUHPC_D25_028/Levistone/wave_test_large/venv/bin/python \
+    /leonardo_work/EUHPC_D25_028/Levistone/venv/bin/python \
         tools/scheduling/test_mf_basic.py
 """
 from __future__ import annotations

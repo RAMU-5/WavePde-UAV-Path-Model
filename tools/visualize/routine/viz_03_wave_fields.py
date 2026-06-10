@@ -17,9 +17,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parent.parent.parent.parent
-DB = ROOT / "database"
-DOMAIN = ROOT / "wave_test_large" / "domain.npz"
-OUT = ROOT / "visualization" / "routine_system" / "03_wave_fields"
+DB = ROOT / "output" / "database"
+DOMAIN = ROOT / "input" / "domain.npz"
+OUT = ROOT / "output" / "figures" / "routine_system" / "03_wave_fields"
 
 
 def render_one(src_idx: int, mask, dx, dy, dz, stations_xy_m,

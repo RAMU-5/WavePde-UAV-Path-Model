@@ -19,8 +19,8 @@ import matplotlib.pyplot as plt
 from business_circles import (load_circles_with_stations, NANSHAN_CIRCLES)
 
 ROOT = Path(__file__).resolve().parent.parent.parent.parent
-SIM = ROOT / "visualization" / "scheduling_system" / "sim_log.npz"
-OUT = ROOT / "visualization" / "scheduling_system" / "05_station_fleet.png"
+SIM = ROOT / "output" / "figures" / "scheduling_system" / "sim_log.npz"
+OUT = ROOT / "output" / "figures" / "scheduling_system" / "05_station_fleet.png"
 
 
 def main():

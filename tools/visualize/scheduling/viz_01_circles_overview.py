@@ -20,9 +20,9 @@ from business_circles import (load_circles_with_stations, demand_profile,
                               NANSHAN_CIRCLES)
 
 ROOT = Path(__file__).resolve().parent.parent.parent.parent
-DOMAIN = ROOT / "wave_test_large" / "domain.npz"
+DOMAIN = ROOT / "input" / "domain.npz"
 OSM_BUILDINGS = ROOT / "shenzhen-osm" / "nanshan" / "buildings.geojson"
-OUT_DIR = ROOT / "visualization" / "scheduling_system"
+OUT_DIR = ROOT / "output" / "figures" / "scheduling_system"
 
 CIRCLE_COLORS = {
     "office":        "#5fc8ff",

@@ -15,8 +15,8 @@ from matplotlib.collections import PolyCollection
 ROOT = Path(__file__).resolve().parent.parent.parent.parent
 OSM_BUILDINGS = ROOT / "shenzhen-osm" / "nanshan" / "buildings.geojson"
 OSM_ROADS = ROOT / "shenzhen-osm" / "nanshan" / "roads.geojson"
-DOMAIN = ROOT / "wave_test_large" / "domain.npz"
-OUT = ROOT / "visualization" / "routine_system" / "01_map_buildings.png"
+DOMAIN = ROOT / "input" / "domain.npz"
+OUT = ROOT / "output" / "figures" / "routine_system" / "01_map_buildings.png"
 
 
 def parse_tags(s):

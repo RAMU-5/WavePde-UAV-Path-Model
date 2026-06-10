@@ -22,9 +22,9 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 
 ROOT = Path(__file__).resolve().parent.parent.parent.parent
-DB = ROOT / "database"
-DOMAIN = ROOT / "wave_test_large" / "domain.npz"
-OUT = ROOT / "visualization" / "routine_system" / "04_routes"
+DB = ROOT / "output" / "database"
+DOMAIN = ROOT / "input" / "domain.npz"
+OUT = ROOT / "output" / "figures" / "routine_system" / "04_routes"
 
 
 def render_one(src_idx: int, mask, dx, dy, dz, stations_xy_m):

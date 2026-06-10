@@ -27,7 +27,7 @@ KPIs reported:
   - wallclock solve time
 
 Run:
-    /leonardo_work/EUHPC_D25_028/Levistone/wave_test_large/venv/bin/python \
+    /leonardo_work/EUHPC_D25_028/Levistone/venv/bin/python \
         tools/scheduling/test_mf_dispatch.py
 """
 from __future__ import annotations
@@ -44,7 +44,7 @@ sys.path.insert(0, str(THIS_DIR))
 from mf_scheduler import (mean_field_schedule, mf_hybrid_lsa_assignment,
                           MFConfig)
 
-PAIR_MATRIX = ROOT / "wave_test_large" / "outputs" / "pair_matrix.npz"
+PAIR_MATRIX = ROOT / "output" / "wave" / "pair_matrix.npz"
 N_STATIONS = 118
 DISPATCH_RADIUS_M = 4000.0       # same as simulation.py
 

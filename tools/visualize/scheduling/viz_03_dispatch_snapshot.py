@@ -25,9 +25,9 @@ from business_circles import (load_circles_with_stations,
                               NANSHAN_CIRCLES)
 
 ROOT = Path(__file__).resolve().parent.parent.parent.parent
-SIM = ROOT / "visualization" / "scheduling_system" / "sim_log.npz"
+SIM = ROOT / "output" / "figures" / "scheduling_system" / "sim_log.npz"
 OSM_BUILDINGS = ROOT / "shenzhen-osm" / "nanshan" / "buildings.geojson"
-OUT = ROOT / "visualization" / "scheduling_system" / "03_dispatch_snapshot.png"
+OUT = ROOT / "output" / "figures" / "scheduling_system" / "03_dispatch_snapshot.png"
 
 CIRCLE_COLORS = {"office": "#5fc8ff", "mall": "#ff7755",
                  "tech": "#3affb3", "entertainment": "#ffaa44"}

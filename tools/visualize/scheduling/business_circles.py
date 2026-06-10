@@ -31,7 +31,7 @@ from typing import Literal
 import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent.parent.parent
-DOMAIN = ROOT / "wave_test_large" / "domain.npz"
+DOMAIN = ROOT / "input" / "domain.npz"
 
 # Demand profile types (24h, evaluated 0.0-24.0)
 ProfileT = Literal["office", "mall", "tech", "entertainment"]

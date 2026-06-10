@@ -42,12 +42,12 @@ import numpy as np
 
 THIS_DIR = Path(__file__).resolve().parent
 ROOT = THIS_DIR.parent.parent.parent
-PAIR_MATRIX = ROOT / "wave_test_large" / "outputs" / "pair_matrix.npz"
+PAIR_MATRIX = ROOT / "output" / "wave" / "pair_matrix.npz"
 
 from business_circles import (load_circles_with_stations, demand_profile,
                               NANSHAN_CIRCLES)
 
-OUT_DIR = ROOT / "visualization" / "scheduling_system"
+OUT_DIR = ROOT / "output" / "figures" / "scheduling_system"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # ---- Simulation parameters -----------------------------------------------

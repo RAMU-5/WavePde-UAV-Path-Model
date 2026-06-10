@@ -9,8 +9,8 @@
 #SBATCH --cpus-per-task=16
 #SBATCH --gpus=0
 #SBATCH --mem=64G
-#SBATCH --output=runs/slurm/traj-%j.out
-#SBATCH --error=runs/slurm/traj-%j.err
+#SBATCH --output=output/runs/slurm/traj-%j.out
+#SBATCH --error=output/runs/slurm/traj-%j.err
 
 # Aura Stage 1 — all-pairs nominal trajectory build on a CPU compute node.
 # Avoids hammering the login node with the 5–6 min scipy.csgraph Dijkstra +
@@ -18,16 +18,16 @@
 #     sbatch aura/slurm/build_trajectories.slurm
 #
 # Env: assumes the existing yli00001 miniconda Python is on PATH. The script
-# enters the project root, runs the CLI, and dumps logs to runs/slurm/.
+# enters the project root, runs the CLI, and dumps logs to output/runs/slurm/.
 
 set -euo pipefail
 
 PROJECT_ROOT="/leonardo_scratch/large/userexternal/yli00001/Aura_Project/Levistone"
 cd "$PROJECT_ROOT"
-mkdir -p runs/slurm
+mkdir -p output/runs/slurm
 
-ASSETS=${ASSETS:-runs/v1}
-OUT=${OUT:-runs/v1/traj}
+ASSETS=${ASSETS:-output/runs/v1}
+OUT=${OUT:-output/runs/v1/traj}
 
 echo "[slurm] node=$(hostname) jobid=${SLURM_JOB_ID:-na} cpus=${SLURM_CPUS_PER_TASK:-na}"
 echo "[slurm] PWD=$PWD"

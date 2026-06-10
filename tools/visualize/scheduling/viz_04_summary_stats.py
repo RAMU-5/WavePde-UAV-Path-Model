@@ -17,8 +17,8 @@ import matplotlib.pyplot as plt
 from business_circles import NANSHAN_CIRCLES
 
 ROOT = Path(__file__).resolve().parent.parent.parent.parent
-SIM = ROOT / "visualization" / "scheduling_system" / "sim_log.npz"
-OUT = ROOT / "visualization" / "scheduling_system" / "04_summary_stats.png"
+SIM = ROOT / "output" / "figures" / "scheduling_system" / "sim_log.npz"
+OUT = ROOT / "output" / "figures" / "scheduling_system" / "04_summary_stats.png"
 
 CIRCLE_COLORS = {"office": "#5fc8ff", "mall": "#ff7755",
                  "tech": "#3affb3", "entertainment": "#ffaa44"}

@@ -36,7 +36,7 @@ from mf_scheduler import mf_hybrid_lsa_assignment, MFConfig
 from business_circles import (load_circles_with_stations, demand_profile,
                               NANSHAN_CIRCLES)
 
-PAIR_MATRIX = ROOT / "wave_test_large" / "outputs" / "pair_matrix.npz"
+PAIR_MATRIX = ROOT / "output" / "wave" / "pair_matrix.npz"
 
 
 # ---------------------------------------------------------------------------
