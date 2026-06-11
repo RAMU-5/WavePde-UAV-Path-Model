@@ -85,4 +85,6 @@ current uniform-wind configuration qualifies; re-validate before using a
 spatially varying wind field. The sponge damping assumes first-arrival
 paths stay clear of the outer boundary.
 
-See `docs/experiment_plan.md` for the paper experiment programme.
+See `docs/experiment_plan.md` for the paper experiment programme and
+`docs/paper_experiments_design.md` for the Results-section design
+(figures, tables, narrative).

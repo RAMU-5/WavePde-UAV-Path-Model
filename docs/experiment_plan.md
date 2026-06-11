@@ -1,5 +1,9 @@
 # Experiment plan — validating the wave-PDE routing method
 
+Companion: `paper_experiments_design.md` designs the Results *section*
+(figure/table specs, narrative, main-vs-appendix split); this file
+orders the *runs*.
+
 Goal: build the evidence chain for the paper, from cheap correctness
 checks to system-scale demonstrations. Ordered so that each tier
 de-risks the next; start at Tier 1 (hours, mostly CPU) before spending
