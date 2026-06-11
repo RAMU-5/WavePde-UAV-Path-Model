@@ -49,6 +49,7 @@ from jax import jit
 from solve_all import (
     build_static_fields, gaussian_source, solve_one,
     N_STEPS, THIS_DIR, OUT_DIR,
+    DT, PULSE_T0_STEPS, PULSE_TAU_STEPS, MIN_PEAK_AMP,
 )
 
 
@@ -135,7 +136,9 @@ def main():
     print(f"[src@dst] cell idx {idx}")
 
     src_spatial = gaussian_source(mask_jnp.shape, idx)
-    solve_jit = jit(solve_one, static_argnums=(11, 12, 13, 14))
+    solve_jit = jit(solve_one, static_argnums=(11, 12, 13, 14, 15, 16, 17, 18))
+    # dx^3-scaled peak threshold (see solve_one_source.py / paper/Q2)
+    min_peak = MIN_PEAK_AMP * (dx / 50.0) ** 3
 
     print("[solve] running backward wave (q -> -q) ...")
     t0 = time.time()
@@ -143,7 +146,8 @@ def main():
                   s["u"], s["v"], s["w"],
                   s["ax"], s["ay"], s["az"],
                   one_minus_damp, s["free"], src_spatial,
-                  dx, dy, dz, args.n_steps)
+                  dx, dy, dz, args.n_steps,
+                  DT, PULSE_T0_STEPS, PULSE_TAU_STEPS, min_peak)
     jax.block_until_ready(T)
     T_np = np.asarray(jax.device_get(T))
     print(f"[solve] done in {time.time()-t0:.1f}s")

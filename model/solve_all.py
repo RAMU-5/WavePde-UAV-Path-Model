@@ -311,7 +311,11 @@ def main():
     s_u = static["u"]; s_v = static["v"]; s_w = static["w"]
     s_ax = static["ax"]; s_ay = static["ay"]; s_az = static["az"]
     s_free = static["free"]
-    solve_jit = jit(solve_one, static_argnums=(11, 12, 13, 14))
+    solve_jit = jit(solve_one, static_argnums=(11, 12, 13, 14, 15, 16, 17, 18))
+    # dx^3-scaled peak threshold (anchor: 1e-6 tuned on the 50 m grid).
+    # Source amplitudes scale with dx^3, so a fixed threshold makes finer
+    # grids miss weak first arrivals (found by the E2.1 GT comparison).
+    min_peak = MIN_PEAK_AMP * (dx / 50.0) ** 3
 
     OUT_DIR.mkdir(exist_ok=True)
     out_npz = OUT_DIR / "pair_times.npz"
@@ -349,7 +353,8 @@ def main():
         T = solve_jit(s_c2_xy, s_c2_z, s_u, s_v, s_w,
                       s_ax, s_ay, s_az,
                       one_minus_damp, s_free, src_spatial,
-                      dx, dy, dz, N_STEPS)
+                      dx, dy, dz, N_STEPS,
+                      DT, PULSE_T0_STEPS, PULSE_TAU_STEPS, min_peak)
         jax.block_until_ready(T)
         tc = time.time()
         print(f"     solve done in {tc-tb:.2f}s, copying...", flush=True)

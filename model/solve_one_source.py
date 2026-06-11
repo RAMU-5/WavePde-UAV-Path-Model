@@ -115,7 +115,13 @@ def main():
     static = build_static_fields(mask_jnp, dx, dy, dz)
     one_minus_damp = (1.0 - static["damp"]).astype(jnp.float32)
 
-    solve_jit = jit(solve_one, static_argnums=(11, 12, 13, 14))
+    solve_jit = jit(solve_one, static_argnums=(11, 12, 13, 14, 15, 16, 17, 18))
+    # Peak threshold must scale with the source amplitude, which goes as
+    # dx^3 (sum=1 cell normalisation). The 1e-6 constant was tuned on the
+    # 50 m grid; using it unscaled at 5 m made the detector miss weak
+    # first arrivals on ~70/118 stations per source (up to +230% late) —
+    # found by the E2.1 ground-truth comparison, see paper/Q2.
+    min_peak = MIN_PEAK_AMP * (dx / 50.0) ** 3
 
     i = args.source_idx
     idx = (int(st_ix[i]), int(st_iy[i]), int(st_iz[i]))
@@ -129,7 +135,8 @@ def main():
                   static["u"], static["v"], static["w"],
                   static["ax"], static["ay"], static["az"],
                   one_minus_damp, static["free"], src_spatial,
-                  dx, dy, dz, N_STEPS)
+                  dx, dy, dz, N_STEPS,
+                  DT, PULSE_T0_STEPS, PULSE_TAU_STEPS, min_peak)
     jax.block_until_ready(T)
     t2 = time.time()
     T_np = np.asarray(jax.device_get(T))

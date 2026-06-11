@@ -62,6 +62,10 @@ class WaveConfig:
 
     sponge_layers: int = _sa.SPONGE_LAYERS
     sponge_strength: float = _sa.SPONGE_STRENGTH
+    # NB: source amplitudes scale with dx^3 (sum=1 cell normalisation);
+    # the default anchor is tuned for the 50 m grid — pass
+    # min_peak_amp = 1e-6 * (dx/50)**3 on other grids or the detector
+    # misses weak first arrivals (see paper/Q2).
     min_peak_amp: float = _sa.MIN_PEAK_AMP
 
     reg_z_low: float = _sa.REG_Z_LOW

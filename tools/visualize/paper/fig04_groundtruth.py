@@ -47,10 +47,12 @@ def collect(gt_file, pm_file):
                 t_wave=r[:, 3], t_ref=r[:, 4], t_dij=r[:, 5])
 
 
-c5 = collect("gt_domain_5m.npz", "pair_matrix_5m.npz")
+c5 = collect("gt_domain_5m.npz", "pair_matrix_5m_v2.npz")
+c5old = collect("gt_domain_5m.npz", "pair_matrix_5m.npz")  # 1e-6 threshold
 c50 = collect("gt_domain.npz", "pair_matrix.npz")
 
 gap5 = (c5["t_wave"] - c5["t_ref"]) / c5["t_ref"]
+gap5o = (c5old["t_wave"] - c5old["t_ref"]) / c5old["t_ref"]
 gap50 = (c50["t_wave"] - c50["t_ref"]) / c50["t_ref"]
 pull5 = (c5["t_dij"] - c5["t_ref"]) / c5["t_ref"]
 
@@ -70,19 +72,24 @@ ax.annotate(f"median gap {np.median(gap5):+.2%}\n"
             bbox=dict(boxstyle="round", fc="w", alpha=0.8))
 
 bins = np.linspace(-0.15, 0.15, 61)
+ax2.hist(np.clip(gap5o, bins[0], bins[-1]), bins=bins, alpha=0.35,
+         label=f"5 m, mis-tuned detector: med {np.median(gap5o):+.1%}, "
+               f"p95 {np.percentile(np.abs(gap5o), 95):.0%} (clipped)",
+         color="C7", density=True)
 ax2.hist(np.clip(gap50, bins[0], bins[-1]), bins=bins, alpha=0.45,
          label=f"50 m: med {np.median(gap50):+.1%}, "
                f"p95 {np.percentile(np.abs(gap50), 95):.1%}",
          color="C3", density=True)
-ax2.hist(np.clip(gap5, bins[0], bins[-1]), bins=bins, alpha=0.6,
-         label=f"5 m: med {np.median(gap5):+.1%}, "
+ax2.hist(np.clip(gap5, bins[0], bins[-1]), bins=bins, alpha=0.65,
+         label=f"5 m (corrected): med {np.median(gap5):+.1%}, "
                f"p95 {np.percentile(np.abs(gap5), 95):.1%}",
          color="C0", density=True)
 ax2.axvline(0, color="k", lw=0.7)
 ax2.set_xlabel("optimality gap (T_wave − T_ref) / T_ref")
 ax2.set_ylabel("density")
-ax2.set_title("(b) gap distribution: resolution effect", fontsize=9)
-ax2.legend(fontsize=8)
+ax2.set_title("(b) gap distribution: resolution + detector threshold",
+              fontsize=9)
+ax2.legend(fontsize=7)
 
 fig.tight_layout()
 for ext in ("png", "pdf"):
@@ -96,6 +103,8 @@ print(json.dumps(dict(
     gap5_med=float(np.median(gap5)),
     gap5_p95=float(np.percentile(np.abs(gap5), 95)),
     gap5_mean=float(np.mean(gap5)),
+    gap5_old_med=float(np.median(gap5o)),
+    gap5_old_p95=float(np.percentile(np.abs(gap5o), 95)),
     gap50_med=float(np.median(gap50)),
     gap50_p95=float(np.percentile(np.abs(gap50), 95)),
     dij_over_ref_med=float(np.median(pull5)),
