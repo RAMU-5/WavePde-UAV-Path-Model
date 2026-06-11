@@ -2,7 +2,8 @@
 
 Companion: `paper_experiments_design.md` designs the Results *section*
 (figure/table specs, narrative, main-vs-appendix split); this file
-orders the *runs*.
+orders the *runs*; `paper_experiments_checklist_zh.md` is the Chinese
+quick-reference progress checklist.
 
 Goal: build the evidence chain for the paper, from cheap correctness
 checks to system-scale demonstrations. Ordered so that each tier
