@@ -50,25 +50,38 @@ ax.annotate("wind q = 4.5 m/s (Mach 0.3)", xy=(0.03, 0.95),
 ax.annotate("", xy=(sx + 60, sy - 130), xytext=(sx, sy - 130),
             arrowprops=dict(arrowstyle="->", color="gray"))
 ax.text(sx + 30, sy - 145, "q", color="gray", ha="center")
-errs = {f"M={r_['mach']:.1f}": r_["med_rel_all"]
-        for r_ in res["e12"]["runs"] if r_["q"] > 0}
+errs = []
+for r_ in res["e12"]["runs"]:
+    if r_["q"] <= 0:
+        continue
+    if r_["mach"] <= 0.31:
+        errs.append(f"M={r_['mach']:.1f}: med {r_['med_rel_all']:.1%}")
+    else:  # upwind wavelength (c−q)τ < dx — report the failing sector
+        errs.append(f"M={r_['mach']:.1f}: upwind med "
+                    f"{r_['med_rel_against']:.0%} (λ↑<dx)")
 ax.set_title("(a) convected wavefronts vs exact (dashed)\n"
-             + "  ".join(f"{k}: med {v:.2%}" for k, v in errs.items()),
-             fontsize=9)
+             + "   ".join(errs), fontsize=9)
 ax.set_xlabel("x [m]"); ax.set_ylabel("y [m]")
 ax.set_aspect("equal")
 
-# ---- (b) anisotropy shaft --------------------------------------------
-e13 = res["e13"]
-for tag, czt, color in (("up", 6.0, "C2"), ("dn", 4.0, "C3")):
-    d = dat[f"e13_d_{tag}"]; Tt = dat[f"e13_T_{tag}"]
-    lab = "ascend" if tag == "up" else "descend"
-    ceff = e13["cz_up_eff"] if tag == "up" else e13["cz_down_eff"]
-    ax2.plot(d, Tt, "o", color=color, ms=4,
-             label=f"{lab}: fit {ceff:.2f} m/s (target {czt:g})")
-    bias = e13["bias_up_s"] if tag == "up" else e13["bias_down_s"]
-    ax2.plot(d, d / ceff + bias, "-", color=color, lw=1)
-    ax2.plot(d, d / czt + bias, "k--", lw=0.7)
+# ---- (b) anisotropy: vertical axis up/down ----------------------------
+e13_runs = {r["dx"]: r for r in res["e13"]["runs"]}
+for dxv, mfc in ((5.0, "none"), (2.5, None)):
+    if dxv not in e13_runs:
+        continue
+    r13 = e13_runs[dxv]
+    for tag, key, czt, color in (("up", "up", 6.0, "C2"),
+                                 ("dn", "down", 4.0, "C3")):
+        d = dat[f"e13_d_{tag}_dx{dxv:g}"]
+        Tt = dat[f"e13_T_{tag}_dx{dxv:g}"]
+        lab = "ascend" if tag == "up" else "descend"
+        ceff = r13[f"cz_{key}_eff"]
+        ax2.plot(d, Tt, "o", color=color, ms=3.5, mfc=mfc,
+                 label=f"{lab} dx={dxv:g}: fit {ceff:.2f} m/s "
+                       f"(target {czt:g})")
+        bias = r13[f"bias_{key}_s"]
+        dd = np.linspace(d.min(), d.max(), 50)
+        ax2.plot(dd, dd / czt + bias, "k--", lw=0.7)
 ax2.set_xlabel("vertical distance from source [m]")
 ax2.set_ylabel("arrival time [s]")
 ax2.set_title("(b) vertical-axis test: climb/descend asymmetry (w_grav)",

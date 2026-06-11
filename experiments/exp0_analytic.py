@@ -60,12 +60,16 @@ OUT_DIR = ROOT / "output" / "runs" / "exp0_analytic"
 
 C0 = 15.0
 SPONGE_M = 40.0          # physical sponge thickness, all resolutions
-# Production threshold. Do NOT lower it: the Gaussian source's spatial
-# tail (sigma = 1.5 cells) is ~1e-5 of peak at 5-7 cells and rings up
-# exactly at the pulse maximum t0 — with a lower threshold every cell
-# within ~8 cells of the source "detects" that tail instead of the
-# travelling wave. All measurement points below stay >= 8.5 cells away.
-MIN_PEAK_AMP = 1e-6
+# Peak threshold, anchored at the production value for dx = 5 m and
+# scaled by (dx/5)^3: the source is normalised to sum=1 over CELLS, so
+# its continuum strength (and every far-field amplitude) scales with
+# dx^3 — a fixed threshold makes fine grids miss weak diffracted first
+# arrivals (E1.4 showed +10%/+29% phantom gaps at dx=2.5/1.25 before
+# this fix). Do NOT lower the anchor: the source's spatial tail
+# (sigma = 1.5 cells, ~1e-5 of peak at 5-7 cells, dx-independent) rings
+# up at the pulse maximum t0 and must stay below threshold — hence also
+# the >= 8.5-cell clearance for every measurement point.
+MIN_PEAK_AMP_5M = 1e-6
 SRC_CLEAR_CELLS = 8.5
 REG_OFF = dict(reg_z_low=-2.0, reg_z_full=-1.0, reg_low_factor=1.0)
 
@@ -83,7 +87,7 @@ def make_cfg(dx: float, tau_s: float, *, c0=C0, cz_up=None, cz_down=None,
         wind=wind, dt=dt, n_steps=n_steps,
         pulse_t0_steps=t0_steps, pulse_tau_steps=tau_steps,
         sponge_layers=max(2, round(SPONGE_M / dx)),
-        min_peak_amp=MIN_PEAK_AMP, **REG_OFF,
+        min_peak_amp=MIN_PEAK_AMP_5M * (dx / 5.0) ** 3, **REG_OFF,
     )
 
 
@@ -222,33 +226,61 @@ def run_e12(quick: bool, npz: dict) -> dict:
 
 # ----------------------------------------------------------------- E1.3
 def run_e13(quick: bool, npz: dict) -> dict:
-    dx, tau = 5.0, 1.6   # tau large enough that lambda_z = cz*tau is resolved
-    nxy, nz = 60, 120
-    mask = np.zeros((nxy, nxy, nz), dtype=bool)
-    src = (30, 30, 60)                       # z = 302.5 m, open domain
-    cfg = make_cfg(dx, tau, cz_up=6.0, cz_down=4.0,
-                   n_steps=350 if quick else 700, dt=0.1)
-    T, wall, _ = timed_solve(mask, dx, src, cfg)
-    zc = cell_centers(nz, dx)
-    sz = zc[src[2]]
-    ks = np.arange(9, 21 if quick else 51)   # 45–250 m on the vertical axis
-    d_up = zc[src[2] + ks] - sz
-    T_up = T[src[0], src[1], src[2] + ks]
-    d_dn = sz - zc[src[2] - ks]
-    T_dn = T[src[0], src[1], src[2] - ks]
-    su, bu, _ = linfit(d_up[np.isfinite(T_up)], T_up[np.isfinite(T_up)])
-    sd, bd, _ = linfit(d_dn[np.isfinite(T_dn)], T_dn[np.isfinite(T_dn)])
-    npz["e13_d_up"], npz["e13_T_up"] = d_up, T_up
-    npz["e13_d_dn"], npz["e13_T_dn"] = d_dn, T_dn
-    rec = dict(
-        cz_up_eff=1.0 / su, cz_up_rel_err=abs(1.0 / su - 6.0) / 6.0,
-        cz_down_eff=1.0 / sd, cz_down_rel_err=abs(1.0 / sd - 4.0) / 4.0,
-        bias_up_s=bu, bias_down_s=bd, wall_s=wall,
-    )
-    print(f"[E1.3] cz_up_eff={rec['cz_up_eff']:.3f} (target 6, "
-          f"err {rec['cz_up_rel_err']:.2%})  cz_down_eff={rec['cz_down_eff']:.3f} "
-          f"(target 4, err {rec['cz_down_rel_err']:.2%})", flush=True)
-    return rec
+    """Vertical climb/descend asymmetry on the open-domain axis.
+
+    Headline fit on 45–100 m, where the vertical pulse is resolved.
+    Beyond ~120 m at dx=5 the on-axis T(d) flattens (apparent speed >
+    cz): the vertical wavelength cz·tau is only 1.3–1.9 cells while the
+    horizontal operator (c_xy=15, lambda 24 m) is well resolved, so an
+    oblique numerical mode overtakes the under-resolved vertical one.
+    We run a second grid at dx=2.5 to show this far-field artifact
+    recede with resolution — it is documented, not hidden.
+    """
+    tau = 1.6
+    dxs = [5.0] if quick else [5.0, 2.5]
+    out = []
+    for dx in dxs:
+        nxy, nz = int(round(300.0 / dx)), int(round(600.0 / dx))
+        mask = np.zeros((nxy, nxy, nz), dtype=bool)
+        src = (nxy // 2, nxy // 2, nz // 2)          # z ≈ 300 m
+        dt = 0.02 * dx
+        d_max = 100.0 if quick else 250.0
+        n_steps = math.ceil((d_max / 4.0 + 6.5 * tau + 3.0) / dt)
+        cfg = make_cfg(dx, tau, cz_up=6.0, cz_down=4.0,
+                       n_steps=n_steps, dt=dt)
+        T, wall, _ = timed_solve(mask, dx, src, cfg)
+        zc = cell_centers(nz, dx)
+        sz = zc[src[2]]
+        k0 = max(9, math.ceil(45.0 / dx))
+        ks = np.arange(k0, int(d_max / dx) + 1)
+        d_up = zc[src[2] + ks] - sz
+        T_up = T[src[0], src[1], src[2] + ks]
+        d_dn = sz - zc[src[2] - ks]
+        T_dn = T[src[0], src[1], src[2] - ks]
+        rec = dict(dx=dx, dt=dt, n_steps=n_steps, wall_s=wall)
+        for tag, dd, TT, czt in (("up", d_up, T_up, 6.0),
+                                 ("down", d_dn, T_dn, 4.0)):
+            fin = np.isfinite(TT)
+            near = fin & (dd <= 100.0)
+            s, b, _ = linfit(dd[near], TT[near])
+            rec[f"cz_{tag}_eff"] = 1.0 / s
+            rec[f"cz_{tag}_rel_err"] = abs(1.0 / s - czt) / czt
+            rec[f"bias_{tag}_s"] = b
+            far = fin & (dd >= 160.0)
+            if far.sum() > 3:
+                sf, _, _ = linfit(dd[far], TT[far])
+                rec[f"cz_{tag}_far_eff"] = 1.0 / sf
+        npz[f"e13_d_up_dx{dx:g}"], npz[f"e13_T_up_dx{dx:g}"] = d_up, T_up
+        npz[f"e13_d_dn_dx{dx:g}"], npz[f"e13_T_dn_dx{dx:g}"] = d_dn, T_dn
+        out.append(rec)
+        far_note = (f"  far: up {rec.get('cz_up_far_eff', float('nan')):.2f}"
+                    f"/down {rec.get('cz_down_far_eff', float('nan')):.2f}"
+                    if "cz_up_far_eff" in rec else "")
+        print(f"[E1.3] dx={dx:g}  cz_up_eff={rec['cz_up_eff']:.3f} "
+              f"(err {rec['cz_up_rel_err']:.2%})  "
+              f"cz_down_eff={rec['cz_down_eff']:.3f} "
+              f"(err {rec['cz_down_rel_err']:.2%}){far_note}", flush=True)
+    return dict(runs=out)
 
 
 # ----------------------------------------------------------------- E1.4

@@ -38,7 +38,11 @@ Status legend: ✅ done · 🔶 partial (code exists, needs systematic runs/figu
 
 These belong in the paper as a "verification" table; no new compute needed.
 
-## Tier 1 — analytic accuracy & convergence (CPU/1 GPU, ~hours) ⬜ START HERE
+## Tier 1 — analytic accuracy & convergence ✅ DONE 2026-06-11
+(`experiments/exp0_analytic.py`, results in `paper/Q1/`; headline:
+pointwise ≤0.9% at the production point, geodesic gap ≤0.52%, measured
+order 0.6–0.9 — the arrival-time observable is not a smooth-field L2
+norm, do not claim 2nd order; M≤0.3 wind envelope measured)
 
 **E1.1 Free-space benchmark.** Empty domain, source at centre: exact
 T*(x) = |x − x₀|/c. Measure relative error vs distance for
