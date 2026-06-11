@@ -70,11 +70,13 @@ bias is τ-limited and calibrated out" — the foundation for C1.
 
 ## Tier 2 — baseline comparisons on the real domain (1–2 GPU-days) ⬜
 
-**E2.1 Discrete ground truth.** Anisotropic Dijkstra on the 26-neighbour
-voxel graph of `domain_5m.npz` (edge weight = segment time with c_xy,
-c_z↑, c_z↓). Compute the same 118×118 matrix.
-*Key figure: scatter T_wave vs T_dijkstra + optimality-gap histogram
-(expect gap ≤ a few %, wave slightly smoother paths).*
+**E2.1 Discrete ground truth.** ✅ DONE 2026-06-11 (`exp1_dijkstra_gt.py`,
+results in `paper/Q2/`). Anisotropic Dijkstra + metric-aware
+string-pulling (raw 26-neighbour graph carries +1–5% angular bias).
+Headline: 5 m, 555 valid pairs, med −4.1%, p95 |gap| 6.4%. Exposed and
+fixed a production bug: min_peak_amp must scale with dx³ —
+pair_matrix_5m_v2.npz is the corrected matrix; downstream consumers
+(database/scheduling) should migrate to v2.
 
 **E2.2 FMM comparison.** aura's Rander3 solver on identical inputs:
 accuracy vs runtime vs memory, GPU-friendliness. Honest comparison —
