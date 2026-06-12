@@ -87,20 +87,27 @@ tricks) and where it doesn't.
 **E2.3 Lower bound sanity.** T / (d/c) ratio distribution (already
 computed: median 1.24, p95 1.78 at 5 m) — include as a table.
 
-## Tier 3 — efficiency claims (reuse existing data + ~1 GPU-day) 🔶
+## Tier 3 — efficiency claims ✅ DONE 2026-06-12
 
-**E3.1 Adjoint speedup (C3).** For 10 random destinations: K=118 forward
-column vs 1 backward solve. Report max/median |ΔT|/T and measured
-wall-clock ratio. Most code exists (`solve_backward.py`).
+(`experiments/exp7_efficiency.py`, results in `paper/Q4/`)
 
-**E3.2 Multicolor scaling (C4).** N_solves vs N_sources for the
-118-station set; error vs minimum source separation; end-to-end
-time for the full matrix: naive 118 / multicolor ~30 / backward-per-
-destination. *Figure: one bar chart of the three pipelines.*
+**E3.1 Adjoint speedup (C3).** ✅ 10 destinations, 476 band pairs vs
+the production forward matrix: med 0.35%, p95 1.0%; one outlier pair
+(59↔29) where the production matrix itself returns inf in reverse —
+detector fragility, not reciprocity failure. One destination column:
+96 min → 49 s = 118×.
 
-**E3.3 GPU throughput (C7).** Wall time vs grid size (50 m → 5 m → 2.5 m
-subdomain) on one A100; steps/s and cells·steps/s; JIT-cache effect on
-array jobs. *Table for the reproducibility section.*
+**E3.2 Multicolor scaling (C4 — narrowed).** ✅ Measured crosstalk
+threshold = 2×band radius = 6 km, exactly the disk-overlap criterion.
+On this 7 km domain with the 3 km band: 82 colours = only 1.4×; the
+"~4×" claim holds for a ≤1.5 km delivery-radius matrix (28 solves,
+4.2×). Batch size does not change per-solve cost.
+
+**E3.3 GPU throughput (C7).** ✅ Warm: 50 m 0.24 s / 5 m 48.9 s /
+2.5 m subdomain 76.7 s (dt=0.05, CFL); large grids saturate at
+~7e12 cell·steps/s; 50 m grid is launch-latency bound. Full 118
+matrix re-measured: 96 A100-min (49 s/solve), ~12 min on an 8-GPU
+array — restate C7 accordingly.
 
 ## Tier 4 — robustness & physics (2–3 GPU-days) 🔶
 
@@ -141,20 +148,28 @@ contraction property, not parameter recovery.
 
 ## Tier 5 — system level (CPU, days) 🔶
 
-**E5.1 Scheduler optimality.** Mean-field vs Hungarian vs greedy on the
-real cost matrix: cost gap and runtime vs problem size (10 → 5000
-UAV-order pairs). Code exists (`scheduler_meanfield.py`, `tools/scheduling/`).
+**E5.1 Scheduler optimality.** ✅ DONE 2026-06-12
+(`experiments/exp8_scheduler.py`, results in `paper/Q4/`). Honest
+outcome: scipy Hungarian is optimal AND fastest at every size tested
+(1.6 s at 5000²); greedy +14–28%; pure mean-field readout degrades to
++180% (more annealing does not help — the -log(x) readout is the
+problem); hybrid readout matches Hungarian (≤+0.4%) but 200× slower.
+Mean-field's paper claim restated as capacity/decentralised value,
+not single-node performance. Penalised objective (unassigned =
+2×max) — without it stranded orders score spuriously low.
 
 **E5.2 City-scale simulation.** `tools/visualize/scheduling/simulation.py`
 (1M orders/day, 7080 UAVs, batching + predictive rebalancing): delivery
 KPIs with wave-T routing vs straight-line-time routing — quantifies how
 much routing accuracy matters downstream. *Figure: KPI table + timeline.*
 
-## Tier 6 — scale transfer (exists, needs figures) 🔶
+## Tier 6 — scale transfer ✅ DONE 2026-06-12
 
-**E6.1 Regional aircraft (C9).** `experiments/exp2_aircraft.py`
-(80×80×12 km, 200 m/s): same kernel, different config. Present T-field +
-climb-profile paths next to the Nanshan multirotor case.
+**E6.1 Regional aircraft (C9).** ✅ Fig.9 (`fig09_transfer.py`):
+Nanshan 5 m T-slice + smoothed-tracer path (exp7b — the raw tracer
+stalled at 187 m, re-confirming E4.2's tracer-bottleneck finding)
+side by side with the 80 km aircraft domain's 4 cloud-avoiding
+trajectories; config-swap table in the caption.
 
 ---
 
