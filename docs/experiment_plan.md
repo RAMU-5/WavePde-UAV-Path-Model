@@ -104,21 +104,22 @@ array jobs. *Table for the reproducibility section.*
 
 ## Tier 4 — robustness & physics (2–3 GPU-days) 🔶
 
-**E4.1 Wavelength operating point.** Systematise `test_wavelength.py`:
-path-time optimality gap (vs E2.1 ground truth) as a function of
-λ/building-spacing. Identifies the operating point and motivates
-broadband. *Figure: gap vs λ curve.*
+**E4.1 Wavelength operating point.** ✅ DONE 2026-06-12
+(`exp3_wavelength_gap.py`, results in `paper/Q3/`). Gap is
+λ-insensitive for λ ≤ 0.6·street width (med ≈ −4%, p95 6.5%);
+long-λ limit at λ ≳ 1.2·street width (−6.4%/9.7% at 2.5×); short
+end grid-saturated. Production τ=0.4 sits mid-plateau.
 
 **E4.2 Broadband value (C5).** Long-only vs short-only vs broadband on
 N=20 hard pairs (narrow streets): success rate + path quality at equal
 cost. Builds on E4.1.
 
-**E4.3 Spatially varying wind.** Divergence-free synthetic field (vortex
-street / SCALED-UrbanFlow output via `exp_sk_wind.py`): (a) forward
-solve validity — paths drift downwind as expected, compare against
-Dijkstra with wind-modified edge weights; (b) reciprocity error vs
-∇·q — quantifies the known caveat, turning it into a measured limit
-instead of a footnote.
+**E4.3 Spatially varying wind.** ✅ DONE 2026-06-12 (`exp4_wind.py`,
+results in `paper/Q3/`). (a) per-pair wind-induced ΔT vs wind-aware
+Dijkstra (full-wind quadratic metric): corr 0.86 at M=0.3, residuals
+within 50 m resolution noise; (b) reciprocity error vs ‖∇·q‖ at fixed
+|q|=4.5: 1.5% discrete floor → 3.7% med at div 2.8e-2 1/s (pure
+compressive) — graceful adjoint degradation.
 
 **E4.4 Wind-inversion closure.** Synthetic flight under known wind →
 `wind_inversion.py` recovery → re-solve with recovered wind → compare

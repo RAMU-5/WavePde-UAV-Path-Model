@@ -58,9 +58,9 @@ import jax.numpy as jnp  # noqa: E402
 OUT_DIR = ROOT / "output" / "runs" / "exp4_wind"
 
 SRC_IDS = list(range(0, 118, 10))            # the 12 Q2 ground-truth sources
-FWD_IDS, BWD_IDS = SRC_IDS[:6], SRC_IDS[6:]  # reciprocity pairs (6 x 6)
+FWD_IDS, BWD_IDS = SRC_IDS, SRC_IDS          # reciprocity pairs (12 x 12)
 VORTEX_L = 3000.0                            # vortex cell size, >> buildings
-COMP_SIGMA = 1500.0                          # compressive blob width
+COMP_L = 1000.0                              # compressive checkerboard period
 LO_D, HI_D = 700.0, 3000.0
 
 
@@ -85,13 +85,13 @@ def vortex_wind(nx, ny, nz, dx, dy, qmax):
 
 
 def comp_wind(nx, ny, nz, dx, dy, qmax):
-    """q = grad(phi), phi a central Gaussian blob: purely compressive."""
+    """q = grad(phi), phi = checkerboard of sources/sinks (period
+    COMP_L): purely compressive (curl-free), div ~ 2 pi qmax / COMP_L —
+    well above the wall-masking divergence floor."""
     X, Y = cellgrid_xy(nx, ny, dx, dy)
-    xc, yc = X.max() / 2, Y.max() / 2
-    r2 = (X - xc) ** 2 + (Y - yc) ** 2
-    phi = np.exp(-0.5 * r2 / COMP_SIGMA ** 2)
-    u2 = -(X - xc) / COMP_SIGMA ** 2 * phi
-    v2 = -(Y - yc) / COMP_SIGMA ** 2 * phi
+    k = 2.0 * np.pi / COMP_L
+    u2 = np.cos(k * X) * np.sin(k * Y)        # = d(phi)/dx / (phi0 k)
+    v2 = np.sin(k * X) * np.cos(k * Y)        # = d(phi)/dy / (phi0 k)
     s = qmax / np.sqrt(u2 ** 2 + v2 ** 2).max()
     u = np.repeat((u2 * s)[:, :, None], nz, axis=2).astype(np.float32)
     v = np.repeat((v2 * s)[:, :, None], nz, axis=2).astype(np.float32)
@@ -314,11 +314,14 @@ def main():
     cases_a = [("nowind", (zero, zero, zero)),
                ("vortex_M01", vort15),
                ("vortex_M03", vort45)]
-    cases_b = [("uniform_M02", None)]            # handled via cfg wind
-    for beta in (0.0, 1.0 / 3.0, 2.0 / 3.0, 1.0):
-        u = vort45[0] + beta * comp45[0]
-        v = vort45[1] + beta * comp45[1]
-        cases_b.append((f"vortex+comp_b{beta:.2f}", (u, v, zero)))
+    # solenoidal <-> compressive blend at FIXED amplitude |q|max = 4.5
+    # (so the divergence sweep is not confounded with wind speed)
+    cases_b = [("uniform_M02", None)]            # near-zero-div reference
+    for beta in (0.0, 0.25, 0.5, 0.75, 1.0):
+        u = (1.0 - beta) * vort45[0] + beta * comp45[0]
+        v = (1.0 - beta) * vort45[1] + beta * comp45[1]
+        s = 4.5 / np.sqrt(u ** 2 + v ** 2).max()
+        cases_b.append((f"blend_b{beta:.2f}", (u * s, v * s, zero)))
 
     meta = {}
     for name, fld in cases_a + cases_b:
@@ -390,7 +393,7 @@ def main():
         u_vortex45_z5=vort45[0][:, :, 5].astype(np.float32),
         v_vortex45_z5=vort45[1][:, :, 5].astype(np.float32),
         meta=json.dumps(dict(cases=meta, git_sha=sha, dx=dx, dz=dz,
-                             vortex_L=VORTEX_L, comp_sigma=COMP_SIGMA)))
+                             vortex_L=VORTEX_L, comp_L=COMP_L)))
     np.savez_compressed(OUT_DIR / "exp4_data.npz", **out)
     print(f"[done] -> {OUT_DIR}/exp4_data.npz", flush=True)
 
