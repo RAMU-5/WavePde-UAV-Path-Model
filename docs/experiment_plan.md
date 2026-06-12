@@ -20,6 +20,7 @@ Paper claims to support:
 - **C6 coupling** — wave ↔ dynamics fixed point converges
 - **C7 performance** — 118 sources at 5 m in ~15 min on A100s
 - **C8 system value** — city-scale scheduling on the T-matrix
+  (✗ out of the experiments chapter — routing-only scope, 2026-06-12)
 - **C9 scale transfer** — same code from multirotor to regional aircraft
 
 Status legend: ✅ done · 🔶 partial (code exists, needs systematic runs/figures) · ⬜ to do
@@ -146,22 +147,20 @@ Fixed point (c0*≈5.7) is set by the surrogate dynamics on unsmoothed
 voxel paths, not the regulatory production params — report the
 contraction property, not parameter recovery.
 
-## Tier 5 — system level (CPU, days) 🔶
+## Tier 5 — system level ✗ OUT OF SCOPE (2026-06-12)
 
-**E5.1 Scheduler optimality.** ✅ DONE 2026-06-12
-(`experiments/exp8_scheduler.py`, results in `paper/Q4/`). Honest
-outcome: scipy Hungarian is optimal AND fastest at every size tested
-(1.6 s at 5000²); greedy +14–28%; pure mean-field readout degrades to
-+180% (more annealing does not help — the -log(x) readout is the
-problem); hybrid readout matches Hungarian (≤+0.4%) but 200× slower.
-Mean-field's paper claim restated as capacity/decentralised value,
-not single-node performance. Penalised objective (unassigned =
-2×max) — without it stranded orders score spuriously low.
+The paper validates the ROUTING algorithm only; scheduler comparisons
+and city-scale simulation are not part of it (user decision). Claim
+C8 is dropped from the experiments chapter accordingly.
 
-**E5.2 City-scale simulation.** `tools/visualize/scheduling/simulation.py`
-(1M orders/day, 7080 UAVs, batching + predictive rebalancing): delivery
-KPIs with wave-T routing vs straight-line-time routing — quantifies how
-much routing accuracy matters downstream. *Figure: KPI table + timeline.*
+**E5.1 Scheduler optimality.** ✗ Out of scope. (An exploratory run
+exists — `experiments/exp8_scheduler.py`, results in
+`output/runs/exp8_scheduler/` — kept for reference, not in the paper.
+Its takeaway, should it ever be needed: scipy Hungarian is optimal
+and fastest at every size tested; the mean-field variants do not win
+on a single node.)
+
+**E5.2 City-scale simulation.** ✗ Out of scope, same decision.
 
 ## Tier 6 — scale transfer ✅ DONE 2026-06-12
 

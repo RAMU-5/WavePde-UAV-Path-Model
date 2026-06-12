@@ -1,14 +1,15 @@
-# Q4 — 下游有没有用?(论文 §5.4 效率 + §5.6 系统级 + §5.7 迁移)
+# Q4 — 下游有没有用?(论文 §5.4 效率 + §5.7 迁移)
 
+> 范围说明:本文只做**路由(routine)算法**的实验;调度算法对比
+> (原计划 E5.1/E5.2)不属于论文范围,已移出(2026-06-12 决定;
+> 探索性数据保留在 `output/runs/exp8_scheduler/`,不入文)。
+>
 > 实验:E3.1+E3.2+E3.3 效率三件套(`experiments/exp7_efficiency.py`,
 > job 45974358,28 min A100;Fig.9 路径补救 `exp7b_fig9.py`,job
-> 45978848)+ E5.1 调度器(`experiments/exp8_scheduler.py`,job
-> 45976273,16 min CPU)+ E6.1 尺度迁移(复用 `exp2_aircraft.py`
-> 产物)。数据:`output/runs/exp7_efficiency/`、`output/runs/
-> exp8_scheduler/`。图:`figs/fig05_pipelines.*`、`figs/
-> fig09_transfer.*`,脚本 `tools/visualize/paper/fig0{5,9}_*.py`。
-> 状态:Fig.5 / Table 4 / Table 5 / Fig.9 ✅ 完成 2026-06-12;
-> E5.2 城市级仿真(Fig.8)按计划推迟到 revision。
+> 45978848)+ E6.1 尺度迁移(复用 `exp2_aircraft.py` 产物)。
+> 数据:`output/runs/exp7_efficiency/`。图:`figs/fig05_pipelines.*`、
+> `figs/fig09_transfer.*`,脚本 `tools/visualize/paper/fig0{5,9}_*.py`。
+> 状态:Fig.5 / Table 4 / Fig.9 ✅ 完成 2026-06-12。
 
 ## E3.1 伴随精度与单目的地加速(Fig. 5c,C3)
 
@@ -78,27 +79,6 @@ inf**(从未检出首峰),伴随解从 29 出发同样在 59 站只截到晚 2.4
   C7 的 "~15 min" 措辞改为 "96 A100-min,8 卡 array 12 min"。
 - 编译开销(冷−warm)1.3–6.3 s,相对 5 m 单解可忽略。
 
-## E5.1 调度器对照(Table 5,§5.6)
-
-真实 v2 成本矩阵,N 个 UAV/N 个订单按站点有放回抽样(同站多机是
-城市常态),目标函数 = 全订单成本和,**未分配按 2×max 罚分**(不罚
-则丢单算法得分虚低——v1 的负 gap 教训);med over 3 seeds
-(≥3000 为 1 seed):
-
-| N | Hungarian(gap/耗时) | greedy | mean-field soft 读出 | mean-field hybrid 读出 |
-|---|---|---|---|---|
-| 100 | 0 / 0.00 s | +16% / 0.01 s | +57% / 0.05 s | +0.4% / 0.05 s |
-| 1000 | 0 / 0.04 s | +25% / 1.1 s | +146% / 4.4 s | **+0.0%** / 5.4 s |
-| 5000 | 0 / **1.6 s** | +14% / 30 s | +180% / 315 s | **+0.0%** / 315 s |
-
-**如实结论:集中式单机场景没有理由不用 Hungarian**(scipy LSA
-5000² 只要 1.6 s,且是精确最优)。纯 mean-field 读出(−log x 上做
-LSA)随规模劣化到 +180%,且加退火轮数无改善(300→2000 轮 gap 不
-变,问题在读出不在退火);hybrid 读出(C + 0.5·(−log x))成本与
-最优持平(≤+0.4%)但慢 200×。论文里 mean-field 的价值主张只能写:
-K>1 容量约束、去中心化/anytime 执行(本表未测),Table 5 同时给出
-这张诚实的单机对照表。
-
 ## E6.1 尺度迁移(Fig. 9,C9)
 
 同一 PDE kernel、同一管线,只换配置:
@@ -116,11 +96,6 @@ K>1 容量约束、去中心化/anytime 执行(本表未测),Table 5 同时给�
 是未平滑体素路径的固有锯齿,与 E4.2 的 19–20% 同源,论文中路径
 长度量一律用 string-pulling 后口径。
 
-## E5.2 城市级仿真(Fig. 8)— 推迟
-
-按 experiment_plan 的"可推迟到 revision"清单处理;调度-路由耦合的
-系统级证据先由 E5.1 + 既有 simulation.py 演示承担。
-
 ## 方法学要点(审稿人关心)
 
 - 伴随与正解的对照不是自我对照:正解列来自生产 SLURM array 管线
@@ -136,7 +111,6 @@ K>1 容量约束、去中心化/anytime 执行(本表未测),Table 5 同时给�
 
 ```bash
 sbatch scripts/submit_exp7.sh   # E3.1+E3.2+E3.3, ~28 min A100
-sbatch scripts/submit_exp8.sh   # E5.1, ~16 min CPU (lrd_all_serial)
 venv/bin/python tools/visualize/paper/fig05_pipelines.py
 venv/bin/python tools/visualize/paper/fig09_transfer.py
 ```
