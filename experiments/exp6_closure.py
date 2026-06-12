@@ -52,7 +52,10 @@ INITS = [  # (c0, cz_up, cz_down)
 ]
 LO_D, HI_D = 700.0, 3000.0
 NOISE_SIGMA = 0.3          # airspeed sensor noise [m/s] per component
-KERNEL_L = 800.0           # wind-field regression length scale [m]
+KERNEL_L = 350.0           # regression length scale [m]; must satisfy
+                           # k*L << 1 vs the flow scale (Gaussian kernel
+                           # attenuates sin(kx) by exp(-k^2 L^2 / 2):
+                           # L=800 on the 3 km vortex kept only 25%)
 SHRINK_EPS = 0.05          # shrink-to-zero regulariser weight
 
 

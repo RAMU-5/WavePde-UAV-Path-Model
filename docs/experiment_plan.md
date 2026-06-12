@@ -110,9 +110,12 @@ array jobs. *Table for the reproducibility section.*
 long-λ limit at λ ≳ 1.2·street width (−6.4%/9.7% at 2.5×); short
 end grid-saturated. Production τ=0.4 sits mid-plateau.
 
-**E4.2 Broadband value (C5).** Long-only vs short-only vs broadband on
-N=20 hard pairs (narrow streets): success rate + path quality at equal
-cost. Builds on E4.1.
+**E4.2 Broadband value (C5).** ✅ DONE 2026-06-12 (`exp5_broadband.py`,
+results in `paper/Q3/`). On the 20 hardest long-λ pairs the bottleneck
+is the tracer, not the T field: raw tracing 14/10/10 (short/long/bb),
+normalised-convolution smoothing lifts all three bands to 17/20 —
+broadband adds no path-level success. C5 narrowed to field-level value
++ long-λ gap repair (E4.1 item 4).
 
 **E4.3 Spatially varying wind.** ✅ DONE 2026-06-12 (`exp4_wind.py`,
 results in `paper/Q3/`). (a) per-pair wind-induced ΔT vs wind-aware
@@ -121,13 +124,20 @@ within 50 m resolution noise; (b) reciprocity error vs ‖∇·q‖ at fixed
 |q|=4.5: 1.5% discrete floor → 3.7% med at div 2.8e-2 1/s (pure
 compressive) — graceful adjoint degradation.
 
-**E4.4 Wind-inversion closure.** Synthetic flight under known wind →
-`wind_inversion.py` recovery → re-solve with recovered wind → compare
-routes. Closes the estimation-to-planning loop (§2.6.2).
+**E4.4 Wind-inversion closure.** ✅ DONE 2026-06-12 (`exp6_closure.py`,
+results in `paper/Q3/`). Vortex-M0.3 truth → 1254 noisy segment
+observations → kernel regression (L=350 m; L=800 attenuates the 3 km
+vortex to 25%, exp(−k²L²/2)) → re-solve: med |ΔT|/T 3.8% vs 8.5%
+ignoring wind — closure error halves even though pointwise field
+rel RMS is only ~0.73 (tracks sample exactly the corridors that
+matter).
 
-**E4.5 Coupled iteration on the real domain (C6).** Convergence of
-(c0, cz↑, cz↓) from 5 different initialisations on 10 station pairs;
-iterations-to-tolerance histogram.
+**E4.5 Coupled iteration on the real domain (C6).** ✅ DONE 2026-06-12
+(same job). 33/50 runs converge, median 4 iterations; per-pair c0*
+spread across inits 1–2 m/s (clear attractor); 2/10 pairs oscillate.
+Fixed point (c0*≈5.7) is set by the surrogate dynamics on unsmoothed
+voxel paths, not the regulatory production params — report the
+contraction property, not parameter recovery.
 
 ## Tier 5 — system level (CPU, days) 🔶
 

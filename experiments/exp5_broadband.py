@@ -133,14 +133,16 @@ def main():
                     t1 = time.time()
                     Tt = np.asarray(T, dtype=np.float64)
                     if tracer == "smooth":
-                        # production-style pre-smoothing (exp_sk_wind):
-                        # fill non-finite with a tall plateau, then a
-                        # 2-cell Gaussian — buildings stay strongly
-                        # repulsive, detection noise is ironed out
+                        # normalised convolution: smooth T inside the
+                        # finite region only (a smoothed 1e6 plateau
+                        # bleeds ~300 s into 40 m streets and overwhelms
+                        # the gradient — v2 failure mode); buildings
+                        # keep their sharp repulsive step
                         fin = np.isfinite(Tt)
-                        Tt = gaussian_filter(
-                            np.where(fin, Tt, Tt[fin].max() + 1e6),
-                            sigma=2.0)
+                        num = gaussian_filter(np.where(fin, Tt, 0.0), 2.0)
+                        den = gaussian_filter(fin.astype(np.float64), 2.0)
+                        Tsm = num / np.maximum(den, 1e-9)
+                        Tt = np.where(fin, Tsm, Tt[fin].max() + 1e6)
                     path, status = trace_path(Tt, st_xyz[s], st_xyz[j],
                                               dx, dy, dz)
                     # collision audit: sample the path every half-cell
