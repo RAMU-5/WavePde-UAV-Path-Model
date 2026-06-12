@@ -1,0 +1,532 @@
+% =====================================================================
+% Results section ("5. Numerical Experiments") for
+% neural_physics_uav_flight_path_optimisation
+%
+% Integration notes:
+%   * \input this file BEFORE the current "5. Discussion" section;
+%     Discussion and Conclusion then renumber to 6 and 7 automatically.
+%   * Requires: graphicx, booktabs, amsmath, amssymb (all standard
+%     with elsarticle).
+%   * Figures live next to this file; add to the preamble:
+%       \graphicspath{{Q1/figs/}{Q2/figs/}{Q3/figs/}{Q4/figs/}}
+%     (or copy the eight fig0X_*.pdf files into the main tex folder).
+%   * Every figure/table is regenerable from the repository:
+%     experiments/exp*.py -> output/runs/<exp>/ -> tools/visualize/
+%     paper/fig0X_*.py (one script per figure, pinned to git SHAs).
+%   * The two appendix subsections at the end of this file
+%     (\paragraph blocks marked APPENDIX) should be moved into the
+%     paper's appendix if one exists.
+% =====================================================================
+
+\section{Numerical experiments}
+\label{sec:experiments}
+
+This section validates the wave--advection routing framework of
+Sections~2--4 in four steps, each addressing one question a
+practitioner would ask. First, \emph{is the computed arrival time
+correct?} We verify the solver against analytic solutions in free
+space, uniform wind, anisotropic climb/descent, and single-obstacle
+diffraction (\S\ref{sec:verification}). Second, \emph{how close is it
+to the discrete optimum on a real city?} We compare against an
+anisotropic Dijkstra ground truth on a $118$-station district at
+$5\,$m resolution (\S\ref{sec:groundtruth}). Third, \emph{what does
+the PDE formulation buy?} We quantify the adjoint and superposition
+shortcuts and the raw GPU throughput (\S\ref{sec:efficiency}).
+Fourth, \emph{where does it break?} We measure the wavelength
+operating envelope and the behaviour under spatially varying,
+non-solenoidal wind (\S\ref{sec:robustness}), and close with a
+scale-transfer demonstration from a delivery multirotor to a regional
+aircraft (\S\ref{sec:transfer}).
+
+% ---------------------------------------------------------------------
+\subsection{Experimental setup}
+\label{sec:setup}
+
+\begin{table}[t]
+\centering
+\caption{Computational domains used throughout this section.}
+\label{tab:domains}
+\small
+\begin{tabular}{lllll}
+\toprule
+Domain & Grid & Resolution & Cells & Purpose \\
+\midrule
+Analytic (empty / 1 box) & up to $480^3$ & $1.25$--$20\,$m & $\le 1.1\times10^8$ & exact-solution benchmarks \\
+Nanshan & $1333\times1443\times42$ & $5\,$m & $8.1\times10^7$ & real city, 118 stations \\
+Nanshan coarse & --- & $50\,$m & $2.9\times10^5$ & wind sweeps, ablations \\
+Regional & $200\times200\times20$ & $400\times400\times600\,$m & $8\times10^5$ & scale transfer (aircraft) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:domains} lists the four domains. The Nanshan domain is
+a $6.7\times7.2\,$km district of Shenzhen voxelised from building
+footprints, with $118$ delivery stations; the $50\,$m coarsening of
+the same district is used where parameter sweeps would be too costly
+at $5\,$m. Unless stated otherwise all runs use the production
+configuration: horizontal speed $c_0 = 15\,$m/s, climb/descent speeds
+$c_z^{\uparrow}=6$, $c_z^{\downarrow}=4\,$m/s (encoded by the vertical
+advection offset of Section~2.1.1), $\Delta t = 0.1\,$s, $4500$ time
+steps, a Gaussian source of width $\sigma = 1.5$ cells and pulse
+width $\tau = 0.4\,$s, an eight-layer absorbing sponge, and
+single-precision arithmetic on one NVIDIA A100.
+
+Four metrics are used consistently. The \emph{optimality gap} is
+$(T_{\mathrm{method}} - T_{\mathrm{ref}})/T_{\mathrm{ref}}$ evaluated
+on \emph{valid pairs}, defined as station pairs separated by
+$700$--$3000\,$m (below $700\,$m the source near field dominates;
+beyond $3000\,$m sponge proximity does). The \emph{path time} is the
+metric-integrated travel time along a traced path --- never the raw
+field value $T$ at the endpoint. \emph{Success} means a
+$-\nabla T$ traced path reaches its destination within two cells
+without entering a building. \emph{Runtime} is JIT-warm wall-clock,
+median of three, on one A100.
+
+First-peak detection introduces a constant arrival bias approximately
+equal to the source pulse peak time $t_0 = 2.5\tau$. We calibrate it
+once per pulse width by solving an empty companion domain and fitting
+$T$ against distance: the slope gives the unbiased effective speed
+and the intercept the bias ($0.945\,$s at the production point),
+which is subtracted from all arrival times reported below.
+
+% ---------------------------------------------------------------------
+\subsection{Verification and accuracy}
+\label{sec:verification}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{fig01_convergence}
+\caption{Free-space accuracy. (a)~Relative arrival-time error versus
+grid spacing for four pulse widths; (b)~measured arrival bias versus
+the source peak time $t_0$, confirming the linear calibration model.}
+\label{fig:convergence}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{fig02_wind_aniso}
+\caption{(a)~Uniform-wind validation: arrival-time error by direction
+sector for Mach numbers $q/c_0 \in \{0.1, 0.3, 0.5\}$.
+(b)~Climb/descent anisotropy: arrival time along the vertical axis
+versus the exact $d/c_z^{\uparrow}$ and $d/c_z^{\downarrow}$ lines.}
+\label{fig:windaniso}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\linewidth]{fig03_obstacle}
+\caption{Single-obstacle benchmark: first-arrival field and traced
+path versus the exact taut-string geodesic over the box.}
+\label{fig:obstacle}
+\end{figure}
+
+\paragraph{Free space (Fig.~\ref{fig:convergence}).}
+Against the exact $T^\ast = \lVert x - x_0\rVert / c_0$, the RMS
+pointwise error at the production operating point ($\Delta x = 5\,$m,
+$\tau = 0.4\,$s) is $0.41\%$, decreasing monotonically to
+$0.13$--$0.27\%$ at $\Delta x = 2.5\,$m; the fitted propagation speed
+is accurate to better than $1.2\%$ at $5\,$m and $0.6\%$ at $2.5\,$m.
+We deliberately do \emph{not} claim the nominal second-order
+convergence of the spatial discretisation: the observable is the
+first peak of a broadband pulse (subject to peak detection and
+direction-dependent numerical dispersion), not an $L_2$ norm of a
+smooth field, and the fitted order of the pointwise error is
+$0.6$--$0.9$. The quantities that matter for routing --- propagation
+speed and the calibrated bias --- converge much faster, as the
+geodesic benchmark below confirms.
+
+\paragraph{Uniform wind (Fig.~\ref{fig:windaniso}a).}
+With a uniform background flow the analytic arrival time on every
+ray is $d/(c_0 \pm q\cdot\hat d)$. For Mach numbers
+$q/c_0 \le 0.3$ the median sector error is $\le 1.2\%$ (p95
+$\le 3.3\%$) in all directions. At $M = 0.5$ the upwind sector
+degrades to a median of $27\%$: the upwind wavelength
+$(c_0 - q)\tau = 3\,$m falls below the grid spacing and the wave is
+under-resolved. This is a \emph{measured} validity boundary of the
+discretisation --- the remedy is a longer pulse or a finer grid ---
+while the downwind and crosswind sectors at the same Mach number
+remain at $3.1\%$ and $0.6\%$.
+
+\paragraph{Climb/descent anisotropy (Fig.~\ref{fig:windaniso}b).}
+The asymmetric vertical speeds are encoded exactly: fitted axis
+speeds are $5.91\,$m/s up and $4.00\,$m/s down at
+$\Delta x = 2.5\,$m (targets $6$ and $4$; errors $1.5\%$ and
+$0.1\%$).
+
+\paragraph{Single obstacle (Fig.~\ref{fig:obstacle}).}
+Against the exact taut-string geodesic over a rectangular box, the
+calibrated arrival-time gap is $\le 0.52\%$ across all resolutions
+$\Delta x \in \{10, 5, 2.5, 1.25\}\,$m, and the $-\nabla T$ traced
+path is homotopic to and geometrically close to the geodesic.
+Diffraction and shadow zones are handled correctly --- the regime
+that defeats straight-line heuristics.
+
+\begin{table}[t]
+\centering
+\caption{Machine-checkable verification suite (no additional solver
+runs required). All checks pass.}
+\label{tab:verification}
+\small
+\begin{tabular}{p{0.34\linewidth}p{0.21\linewidth}p{0.36\linewidth}}
+\toprule
+Check & Domain & Result \\
+\midrule
+Reciprocity: forward vs.\ adjoint ($q\to-q$) & synthetic, $5$ wind configs & $0.00\%$ (bitwise); negative control $26\%$ \\
+Broadband linearity $\psi_{bb}=\psi_L+\psi_S$ & Nanshan $50\,$m & coverage $100\%$; median $|\Delta T| = 1\,\Delta t$ \\
+Multicolor batch $=$ superposed singles & Nanshan $50\,$m, $4$ sources & $0.00\%$ at probe pairs; $3.9\times$ faster \\
+Real-domain forward/backward pairs & Nanshan $5\,$m, $48$ pairs & median $0.12\%$ (one boundary outlier $20.5\%$)\footnotemark \\
+Wave--dynamics coupled iteration & Nanshan $50\,$m & parameter change $0.396 \to 0.083$ in $5$ iterations \\
+\bottomrule
+\end{tabular}
+\end{table}
+\footnotetext{The outlier pair starts and ends adjacent to the
+absorbing sponge, consistent with the stated requirement that
+first-arrival paths avoid the sponge layer.}
+
+Table~\ref{tab:verification} adds five structural checks that
+exercise the identities the efficiency claims of
+\S\ref{sec:efficiency} rely on (reciprocity, linearity,
+superposition) at machine precision.
+
+% ---------------------------------------------------------------------
+\subsection{Comparison with a discrete ground truth on a real city}
+\label{sec:groundtruth}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{fig04_groundtruth}
+\caption{Wave arrival times versus the discrete ground truth on the
+Nanshan domain. (a)~$555$ valid station pairs at $5\,$m, calibrated
+wave time versus Dijkstra + metric-aware string-pulling;
+(b)~optimality-gap histograms: production detector before the
+threshold fix (grey), $50\,$m resolution (red), corrected $5\,$m
+(blue).}
+\label{fig:groundtruth}
+\end{figure}
+
+\paragraph{Reference construction.}
+The reference is a $26$-neighbour voxel graph over the identical
+building mask and station cells, whose edge weights solve the
+\emph{same} continuous metric as the PDE coefficients --- horizontal
+speed $c_0$ with the regulatory low-altitude band, and the
+climb/descent ellipsoid with the vertical offset --- exactly per
+edge. Raw $26$-neighbour Dijkstra carries a systematic angular
+discretisation error (median $+1.1\%$, up to $+5.0\%$ at $5\,$m), so
+all reference paths are shortened by metric-aware string-pulling
+(a shortcut is accepted only if it is line-of-sight \emph{and}
+reduces metric time); the result is a tight upper bound on the true
+optimum, fully attributable as a feasible flight path.
+
+\paragraph{Headline result (Fig.~\ref{fig:groundtruth}).}
+Over $555$ valid pairs at $5\,$m the calibrated wave arrival time is
+within $\pm 6.5\%$ of the discrete ground truth for $95\%$ of pairs,
+with a median of $-4.1\%$. The sign and size of the median offset are
+consistent with the bracketing structure: the reference is an upper
+bound on the optimum (greedy string-pulling is not globally optimal),
+while finite-wavelength diffraction lets the first arrival ``round
+corners'' slightly; the true optimum lies between. The detour-ratio
+sanity check on the same matrix gives
+$T/(d/c_0)$ median $1.12$ / p95 $1.23$ with no pair below $1$: the
+free-space lower bound is never violated.
+
+\paragraph{A production bug found by this comparison.}
+The first run of this comparison returned a long positive tail
+(p95 $36\%$, up to $+230\%$). The cause was \emph{not} the PDE: the
+peak-detection threshold, tuned on the $50\,$m grid, was three orders
+of magnitude too high at $5\,$m --- source normalisation makes far-field
+amplitudes scale as $\Delta x^3$, so weak diffracted first arrivals
+in shadow zones fell below threshold and a later, stronger wave
+packet was recorded instead ($71$--$86$ of $118$ stations per source).
+Scaling the threshold by $(\Delta x / 50\,\mathrm{m})^3$ removed the
+tail entirely (Fig.~\ref{fig:groundtruth}b) and was folded back into
+the production pipeline. We report this deliberately: the gap
+distribution is a property of resolution and detection, not of the
+formulation, and the ground-truth harness is what isolates such
+regressions.
+
+\begin{table}[t]
+\centering
+\caption{Wave solver versus the discrete baseline on the $5\,$m
+Nanshan domain ($8.1\times10^7$ cells, ${\sim}2\times10^9$ graph
+edges).}
+\label{tab:comparison}
+\small
+\begin{tabular}{p{0.24\linewidth}p{0.33\linewidth}p{0.34\linewidth}}
+\toprule
+ & Wave (ours) & Dijkstra + string-pulling \\
+\midrule
+One source $\to$ whole domain & $49\,$s (A100) & $70\,$s + $0.3\,$s pull (1 CPU core; graph build ${\sim}9\,$min amortised) \\
+Output & full $T$ field, any destination $O(1)$ & per-source distances + predecessors \\
+Full $118\times118$ matrix & $118$ solves $=96\,$min; \S\ref{sec:efficiency} reduces per-destination cost to $1$ solve & $118$ searches (parallelisable) \\
+Wind / anisotropy / regulation & native PDE coefficients & per-edge closed-form metric (derived here) \\
+Memory & ${\sim}1\,$GB (float32 fields) & ${\sim}60\,$GB (CSR graph) \\
+Accuracy & $-4.1\%$ median / $6.4\%$ p95 vs.\ reference & $+1.1\%$ angular bias before pulling \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:comparison} summarises the honest comparison: for a
+single source the two approaches are of the same order, and the
+graph search is a strong baseline. The wave formulation wins on
+(a)~the asymptotics of multi-destination problems via reciprocity and
+superposition (next subsection), (b)~physical generality --- wind,
+anisotropy and regulatory layers enter as coefficients with no
+re-derivation of an edge metric --- and (c)~memory and the
+continuously differentiable $T$ field from which paths follow by
+gradient descent.
+
+% ---------------------------------------------------------------------
+\subsection{Efficiency: adjoint, superposition, throughput}
+\label{sec:efficiency}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{fig05_pipelines}
+\caption{Efficiency measurements on the $5\,$m domain.
+(a)~Crosstalk of batched (superposed-source) solves versus source
+separation; the empirical safe threshold coincides with the
+theoretical disk-overlap criterion at twice the pairing radius.
+(b)~Full-matrix wall time versus colouring separation (bar labels:
+number of solves); hatched bars are corrupted per (a).
+(c)~End-to-end pipelines with measured accuracy annotations.}
+\label{fig:pipelines}
+\end{figure}
+
+\paragraph{Adjoint (one solve per destination).}
+By the reciprocity of Section~2 (flipping the full advection field
+$q \to -q$, including the vertical climb/descent offset), one
+backward solve from a destination yields the travel time \emph{from
+every origin}. Validated against the forward production matrix on
+$10$ destinations ($476$ valid pairs), the agreement is median
+$0.35\%$, p95 $1.0\%$\footnote{One pair of $476$ disagrees by
+$146\%$; on this station pair the production \emph{forward} matrix
+itself fails to detect a first peak in the reverse direction --- a
+detector-fragility of that geometry, not a reciprocity failure.}.
+The wall-clock consequence on the $118$-station district: a
+destination column costs $96\,$min as $118$ forward solves and
+$49\,$s as one adjoint solve --- a $118\times$ reduction at
+sub-percent error (Fig.~\ref{fig:pipelines}c).
+
+\paragraph{Multicolor superposition --- with its measured limits.}
+Linearity allows several sources in one solve; the first-arrival
+field then serves each source within its own service disk. We
+measured the crosstalk of batched solves against production
+single-source rows as a function of source separation
+(Fig.~\ref{fig:pipelines}a): contamination is severe below
+$6\,$km and drops to $0.4\%$ at $6\,$km --- exactly twice the
+$3\,$km pairing radius, i.e.\ the separation at which two service
+disks can no longer overlap. The criterion is therefore predictable
+a priori. Its consequence on \emph{this} domain
+($6.7\times7.2\,$km) is modest: a clean colouring of all $118$
+stations at the full $3\,$km pairing radius needs $82$ solves
+($1.4\times$ saving); for a last-mile matrix with a $1.5\,$km
+service radius the same criterion permits $28$ solves
+($4.2\times$). The saving scales with the squared ratio of domain
+size to service diameter, so batching pays off on large domains and
+short-range matrices, and we state the claim in that conditional
+form.
+
+\begin{table}[t]
+\centering
+\caption{Solver throughput on one A100 (production pulse; cold = first
+call including compilation with a cleared JIT cache; warm = median of
+3).}
+\label{tab:throughput}
+\begin{tabular}{lrrrrrr}
+\toprule
+Grid & Cells & $\Delta t$ [s] & Cold [s] & Warm [s] & Steps/s & Cell$\cdot$steps/s \\
+\midrule
+$50\,$m & $2.9\times10^5$ & $0.1$ & $4.3$ & $0.24$ & $18\,500$ & $5.3\times10^{9}$ \\
+$5\,$m & $8.1\times10^7$ & $0.1$ & $55.2$ & $48.9$ & $92$ & $7.4\times10^{12}$ \\
+$2.5\,$m subdomain & $1.2\times10^8$ & $0.05$ & $78.0$ & $76.7$ & $59$ & $7.1\times10^{12}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Throughput (Table~\ref{tab:throughput}).}
+Large grids saturate the device at ${\sim}7\times10^{12}$
+cell-steps per second (the $5\,$m and $2.5\,$m rows agree), while
+the $50\,$m grid is kernel-launch bound, three orders of magnitude
+below saturation --- which is why the $50\,$m ablation sweeps of
+\S\ref{sec:robustness} cost seconds per solve. Compilation overhead
+is $1$--$6\,$s and amortises over array jobs through the persistent
+JIT cache. The full $118\times118$ matrix at $5\,$m costs
+$96$ A100-minutes ($49\,$s per solve); an eight-GPU array delivers
+it in ${\sim}12\,$min wall-clock.
+
+% ---------------------------------------------------------------------
+\subsection{Robustness and operating envelope}
+\label{sec:robustness}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.8\linewidth]{fig06_wavelength}
+\caption{Wavelength operating point: optimality gap versus dominant
+wavelength $\lambda \approx 2\pi c_0 \tau$ (bottom axis) and
+$\lambda$ in units of the median street width (top axis), with the
+production point and the two-band (broadband) proxy marked.}
+\label{fig:wavelength}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{fig07_wind}
+\caption{Spatially varying wind on the $50\,$m domain.
+(a)~Path drift under a solenoidal vortex field at $M=0.3$;
+(b)~per-pair wind-induced time change $\Delta T$, wave versus
+wind-aware Dijkstra; (c)~adjoint reciprocity error versus RMS
+$\nabla\!\cdot q$ at fixed $|q|_{\max}$.}
+\label{fig:wind}
+\end{figure}
+
+\paragraph{Wavelength operating point (Fig.~\ref{fig:wavelength}).}
+Sweeping the pulse width over $\tau \in [0.1, 3.2]\,$s
+($\lambda \approx 9$--$300\,$m) against the ground truth of
+\S\ref{sec:groundtruth} shows three regimes. For
+$\lambda \le 0.6\,W$ (where $W = 120\,$m is the median free street
+width at cruise altitude) the gap is wavelength-independent ---
+median ${\approx}{-4}\%$, p95 $6.5\%$ --- so the error there is a
+resolution/detection property, not a wavelength property, and the
+production point sits in the middle of this plateau with margin on
+both sides. Beyond $\lambda \gtrsim 1.2\,W$ the negative offset
+grows (median $-6.4\%$, p95 $9.7\%$ at $\lambda = 2.5\,W$):
+diffraction rounds corners more than a point vehicle can follow ---
+the measured long-wavelength limit. At the short end the grid
+low-pass saturates the effective wavelength near $5\Delta x$, so
+wavelengths below ${\sim}30\,$m are unrealisable at $5\,$m
+resolution. A two-band combination
+$\min(T_{0.2}, T_{1.6})$ (same cost as two solves) restores
+long-band timing to plateau accuracy, which is the quantitative
+basis for the broadband guidance of Section~2.
+
+\paragraph{Spatially varying wind (Fig.~\ref{fig:wind}).}
+On the $50\,$m domain we impose synthetic fields seen identically by
+both methods: a solenoidal vortex array (stream function,
+$3\,$km cells) and an irrotational compressive checkerboard
+(potential flow, $1\,$km period), blended at fixed
+$|q|_{\max} = 4.5\,$m/s so that divergence is varied without
+confounding wind speed. The reference generalises the Dijkstra
+metric to the full wind vector by solving the air-speed ellipsoid
+quadratic per edge. Two results. (i)~\emph{Forward physics:} the
+per-pair wind-induced change $\Delta T = T(q) - T(0)$ --- a
+difference that cancels static discretisation error --- correlates
+at $0.86$ with the wind-aware ground truth at $M = 0.3$, with
+residuals within the $50\,$m resolution noise; optimal routes drift
+downwind as expected (Fig.~\ref{fig:wind}a). The regulatory
+low-altitude band under strong wind becomes locally ``supersonic''
+(wind exceeds the speed cap); the PDE handles this natively
+(perturbations propagate only downwind) and the graph drops the
+corresponding directed edges --- the two formulations agree that
+such corridors are one-way. (ii)~\emph{Adjoint degradation:}
+reciprocity holds exactly only for divergence-free $q$. Measured
+forward/backward disagreement rises from a $1.5\%$ discrete floor
+(uniform wind) to median $3.7\%$ / p95 $8.5\%$ for the purely
+compressive field at RMS $\nabla\!\cdot q = 2.8\times10^{-2}\,$s$^{-1}$
+--- a graceful degradation, and urban boundary-layer flows are
+vorticity-dominated with divergence an order of magnitude below this
+stress test, so the adjoint shortcut remains in its floor regime in
+practice.
+
+Two closure experiments --- a broadband tracing ablation on the
+hardest long-wavelength pairs, and the wind-inversion and
+wave--dynamics coupling loops --- are reported in the appendix; their
+outcome in one sentence each: path-tracing robustness, not arrival
+timing, is the binding constraint on hard pairs (smoothing the $T$
+field before gradient descent lifts success from $10$--$14/20$ to
+$17/20$ for every band, with no additional gain from broadband); and
+the estimation$\to$planning loop closes (re-planning with wind
+recovered from $1254$ noisy track segments halves the
+route-time error versus ignoring wind, median $8.5\% \to 3.8\%$),
+while the wave--dynamics fixed-point iteration converges in a median
+of $4$ iterations from varied initialisations.
+
+% ---------------------------------------------------------------------
+\subsection{Scale transfer}
+\label{sec:transfer}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{fig09_transfer}
+\caption{One kernel, two vehicles. (a)~Delivery multirotor on the
+$5\,$m Nanshan grid: first-arrival field at cruise height and the
+traced $269\,$s path between stations. (b)~Regional aircraft on the
+$80\times80\,$km domain: four trajectories around three anisotropic
+weather cells at FL260. The configurations differ only in
+$c_0$ ($15 \to 200\,$m/s), $c_z$ ($(6,4) \to (25,20)\,$m/s),
+resolution ($5 \to 400\,$m) and domain size.}
+\label{fig:transfer}
+\end{figure}
+
+Figure~\ref{fig:transfer} runs the identical solver and path-extraction
+pipeline at two ends of the urban-airspace spectrum: a $15\,$m/s
+delivery multirotor threading $5\,$m street canyons, and a
+$200\,$m/s regional aircraft climbing to FL260 and routing around
+three weather cells in an $80\,$km domain. No code differs between
+the two cases --- only the configuration table shown in the caption.
+Obstacles enter as a building mask in one case and as smooth
+wave-speed suppressions (Section~2.1) in the other; the same
+$-\nabla T$ descent produces street-level paths and en-route
+climb profiles respectively. The method is a configuration, not a
+codebase per vehicle class.
+
+% =====================================================================
+% APPENDIX MATERIAL — move the following into the paper's appendix.
+% =====================================================================
+
+\section*{Appendix: robustness closures}
+\label{sec:appendix-closures}
+
+\paragraph{Broadband ablation on hard pairs.}
+We selected the $20$ valid pairs with the most negative
+long-wavelength gap in Fig.~\ref{fig:wavelength} (worst $-8.6\%$) and
+traced $-\nabla T$ paths on the short-band ($\tau=0.2\,$s),
+long-band ($\tau=1.6\,$s) and per-cell-earliest broadband fields,
+scoring success as reaching the source within two cells with no
+collision along the densely sampled polyline. On the raw $5\,$m
+fields, success is $14/20$, $10/20$ and $10/20$ respectively --- but
+the failures are tracer stalls, not timing errors (the arrival times
+at these pairs are accurate per Fig.~\ref{fig:wavelength}). Smoothing
+the finite region of the field by normalised convolution
+($\sigma = 2$ cells; buildings keep a sharp repulsive plateau ---
+na\"ively smoothing the plateau bleeds hundreds of seconds into
+$40\,$m streets and destroys the gradient) lifts all three bands to
+$17/20$, with the three remaining failures shared by every band
+(a geometric tracing pathology of one source). Broadband therefore
+adds no \emph{path-level} success at this resolution; its value is at
+the field level --- one two-band excitation yields smooth guidance
+and accurate timing simultaneously, and repairs the long-band gap of
+Fig.~\ref{fig:wavelength} --- and we state the claim in that narrowed
+form.
+
+\paragraph{Wind-inversion closure.}
+With the $M=0.3$ vortex field of Fig.~\ref{fig:wind} as truth, we
+synthesised flight tracks (twelve sources, five destinations each),
+segmented them at $50\,$m, added $0.3\,$m/s observation noise
+($1254$ segments), and recovered the wind by Gaussian-kernel
+regression ($L = 350\,$m; the kernel attenuates a wavelength
+$\Lambda$ by $e^{-k^2L^2/2}$, so $L$ must be small against the
+$3\,$km flow structure). The pointwise field recovery is mediocre ---
+relative RMS ${\approx}0.73$ --- yet re-solving all sources with the
+recovered field halves the route-time error against truth: median
+$|\Delta T|/T = 3.8\%$ / p95 $12.9\%$, versus $8.5\%$ / $20.9\%$ when
+wind is ignored. Tracks sample exactly the corridors that routing
+revisits, so accuracy concentrates where it matters; the
+estimation$\to$planning loop of Section~2.6 closes under realistic
+sparsity.
+
+\paragraph{Coupled wave--dynamics iteration.}
+The fixed-point iteration between the wave parameters
+$(c_0, c_z^{\uparrow}, c_z^{\downarrow})$ and a surrogate vehicle
+dynamics was run on ten station pairs from five initialisations each
+(relaxation $\alpha = 0.5$, $2\%$ tolerance). $33/50$ runs converge,
+median four iterations; for seven of ten pairs at least three of five
+initialisations converge to the same point within $1$--$2\,$m/s ---
+a well-defined attractor --- while two pairs oscillate from every
+initialisation. The fixed point itself ($c_0^\ast \approx 5.7\,$m/s)
+is a property of the surrogate dynamics evaluated on unsmoothed voxel
+paths, whose stair-stepping biases observed speeds low; the
+production parameters are regulatory values, not the fixed point of
+any simulated dynamics. The experiment therefore supports the
+\emph{contraction} property claimed in Section~2 --- fast,
+initialisation-robust convergence --- and we make no claim of
+parameter recovery.
