@@ -6,6 +6,7 @@ Fully vectorised (no per-path Python loops):
       that steps across a building corner between two free cells).
 Per-file processing keeps memory bounded.
 """
+import argparse
 import sys
 import numpy as np
 from pathlib import Path
@@ -15,11 +16,15 @@ K = 6  # sub-samples per segment (gamma step ~1.5m -> ~0.25m resolution)
 
 
 def main():
-    z = np.load(ROOT / "input" / "kuwait_stations.npz")
+    p = argparse.ArgumentParser()
+    p.add_argument("--domain", default="kuwait_stations.npz")
+    p.add_argument("--dbdir", default="database_kuwait")
+    args = p.parse_args()
+    z = np.load(ROOT / "input" / args.domain)
     mask = z["mask"]
     dx, dy, dz = float(z["dx"]), float(z["dy"]), float(z["dz"])
     nx, ny, nz = mask.shape
-    DB = ROOT / "output" / "database_kuwait"
+    DB = ROOT / "output" / args.dbdir
 
     def inside(pts):
         ix = np.clip(np.round(pts[:, 0] / dx).astype(np.int32), 0, nx - 1)
@@ -81,12 +86,14 @@ def main():
     for w in worst[:12]:
         print("  ", w)
 
-    np.savez(ROOT / "output" / "wave" / "collision_summary.npz",
+    tag = args.dbdir.replace("database_", "")
+    out = ROOT / "output" / "wave" / f"collision_summary_{tag}.npz"
+    np.savez(out,
              hit_vertex_paths=hit_v_paths, hit_vertex_pts=hit_v_pts,
              hit_segment_paths=hit_s_paths,
              tot_paths=tot_paths, tot_pts=tot_pts,
              worst=np.array(worst, dtype=object))
-    print("\n[saved] output/wave/collision_summary.npz", flush=True)
+    print(f"\n[saved] {out}", flush=True)
 
 
 if __name__ == "__main__":

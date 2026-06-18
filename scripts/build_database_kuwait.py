@@ -37,7 +37,6 @@ import jax  # noqa: E402
 import wave_api  # noqa: E402
 from wave_api import WaveConfig, build_static_fields  # noqa: E402
 
-DB_DIR = ROOT / "output" / "database_kuwait"
 LO_DIST_M, HI_DIST_M = 700.0, 3000.0
 
 
@@ -112,7 +111,10 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--source-idx", type=int, required=True)
     p.add_argument("--domain", default="kuwait_stations.npz")
+    p.add_argument("--outdir", default="database_kuwait",
+                   help="subdir under output/ for the path bundles")
     args = p.parse_args()
+    DB_DIR = ROOT / "output" / args.outdir
     DB_DIR.mkdir(parents=True, exist_ok=True)
 
     out_path = DB_DIR / f"paths_{args.source_idx:03d}.npz"

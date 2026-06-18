@@ -5,18 +5,24 @@ inside a building voxel. Plots: (left) whole domain with all routes and
 collision points in red; (right) zoom on the worst collision cluster.
 """
 from __future__ import annotations
+import argparse
 from pathlib import Path
 import numpy as np
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parents[1]
-DB = ROOT / "output" / "database_kuwait"
 K = 6
 
 
 def main():
-    z = np.load(ROOT / "input" / "kuwait_stations.npz")
+    p = argparse.ArgumentParser()
+    p.add_argument("--domain", default="kuwait_stations.npz")
+    p.add_argument("--dbdir", default="database_kuwait")
+    args = p.parse_args()
+    DB = ROOT / "output" / args.dbdir
+    tag = args.dbdir.replace("database_", "")
+    z = np.load(ROOT / "input" / args.domain)
     mask = z["mask"]; dx, dy, dz = float(z["dx"]), float(z["dy"]), float(z["dz"])
     nx, ny, nz = mask.shape
     st = z["stations_xy_m"]
@@ -90,7 +96,7 @@ def main():
     axs[1].set_xlabel("x (m)"); axs[1].set_ylabel("y (m)")
 
     plt.tight_layout()
-    out = ROOT / "output" / "wave" / "kuwait_collisions.png"
+    out = ROOT / "output" / "wave" / f"kuwait_collisions_{tag}.png"
     plt.savefig(out, dpi=130)
     print(f"[saved] {out}", flush=True)
 

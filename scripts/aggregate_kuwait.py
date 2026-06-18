@@ -7,6 +7,7 @@ Writes:
     output/wave/kuwait_routes.png       — all traced paths over footprint
 """
 from __future__ import annotations
+import argparse
 from pathlib import Path
 
 import numpy as np
@@ -15,13 +16,18 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parents[1]
-DB = ROOT / "output" / "database_kuwait"
 OUT = ROOT / "output" / "wave"
 LO, HI = 700.0, 3000.0
 
 
 def main():
-    z = np.load(ROOT / "input" / "kuwait_stations.npz", allow_pickle=False)
+    p = argparse.ArgumentParser()
+    p.add_argument("--domain", default="kuwait_stations.npz")
+    p.add_argument("--dbdir", default="database_kuwait")
+    args = p.parse_args()
+    DB = ROOT / "output" / args.dbdir
+    tag = args.dbdir.replace("database_", "")
+    z = np.load(ROOT / "input" / args.domain, allow_pickle=False)
     mask = z["mask"]; dx = float(z["dx"]); dy = float(z["dy"])
     stations = z["stations_xy_m"]; lonlat = z["station_lonlat"]
     n = len(stations)
@@ -64,13 +70,14 @@ def main():
               f"p95={np.percentile(ratio,95):.2f}")
 
     OUT.mkdir(parents=True, exist_ok=True)
+    pm = OUT / f"pair_matrix_{tag}.npz"
     np.savez_compressed(
-        OUT / "pair_matrix_kuwait.npz",
+        pm,
         T_matrix=T, valid_mask=valid, distances_m=D,
         stations_xy_m=stations, station_lonlat=lonlat,
         n_pairs_valid=np.int32(valid.sum()),
         n_pairs_with_T=np.int32(finite.sum()))
-    print(f"[saved] {OUT/'pair_matrix_kuwait.npz'}")
+    print(f"[saved] {pm}")
 
     # Route overview figure
     foot = mask.any(axis=2).T.astype(float); foot[foot == 0] = np.nan
@@ -82,10 +89,12 @@ def main():
     ax.scatter(stations[:, 0], stations[:, 1], c="red", s=25,
                edgecolor="k", lw=0.4, zorder=5)
     ax.set_title(f"Kuwait CBD — {total_paths} station-to-station routes "
-                 f"({n} stations, no wind)")
+                 f"({n} stations, no wind) [{tag}]")
     ax.set_xlabel("x (m)"); ax.set_ylabel("y (m)")
-    plt.tight_layout(); plt.savefig(OUT / "kuwait_routes.png", dpi=120)
-    print(f"[saved] {OUT/'kuwait_routes.png'}")
+    plt.tight_layout()
+    rp = OUT / f"kuwait_routes_{tag}.png"
+    plt.savefig(rp, dpi=120)
+    print(f"[saved] {rp}")
 
 
 if __name__ == "__main__":
