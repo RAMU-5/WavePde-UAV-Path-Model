@@ -36,10 +36,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
 
-import sys as _sys
-from pathlib import Path as _P
-_sys.path.insert(0, str(_P(__file__).resolve().parents[1] / "model"))
-import solve_all as SA
+import model.solve_all as SA
 
 ROOT = _THIS.parent
 OUT = ROOT / "output" / "figures" / "3d_aircraft"

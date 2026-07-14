@@ -29,7 +29,7 @@ export XLA_PYTHON_CLIENT_PREALLOCATE=false
 export OMP_NUM_THREADS=8
 export MKL_NUM_THREADS=8
 
-$VENV/bin/python -u experiments/exp0_analytic.py
+$VENV/bin/python -u -m experiments.exp0_analytic
 
 echo "=== done ==="
 date

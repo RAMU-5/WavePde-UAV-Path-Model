@@ -31,7 +31,7 @@ export OMP_NUM_THREADS=4
 export MKL_NUM_THREADS=4
 export XLA_FLAGS="--xla_cpu_multi_thread_eigen=true intra_op_parallelism_threads=4"
 
-python3 -u model/solve_one_source.py --source-idx ${SLURM_ARRAY_TASK_ID} --no-full
+python3 -u -m model.solve_one_source --source-idx ${SLURM_ARRAY_TASK_ID} --no-full
 
 echo "=== done $SLURM_ARRAY_TASK_ID ==="
 date

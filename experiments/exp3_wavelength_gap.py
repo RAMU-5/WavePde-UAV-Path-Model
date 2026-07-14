@@ -22,19 +22,16 @@ from __future__ import annotations
 import json
 import math
 import subprocess
-import sys
 import time
 from pathlib import Path
 
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "model"))
-sys.path.insert(0, str(ROOT / "experiments"))
 
-from exp1_dijkstra_gt import nudge_stations  # noqa: E402
-import wave_api  # noqa: E402
-from wave_api import WaveConfig, build_static_fields, solve_forward  # noqa: E402
+from experiments.exp1_dijkstra_gt import nudge_stations  # noqa: E402
+import model.wave_api as wave_api  # noqa: E402
+from model.wave_api import WaveConfig, build_static_fields, solve_forward  # noqa: E402
 
 OUT_DIR = ROOT / "output" / "runs" / "exp3_wavelength"
 CHK = OUT_DIR / "exp3_chk.npz"

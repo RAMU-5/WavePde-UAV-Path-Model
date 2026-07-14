@@ -54,16 +54,13 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 
-import sys as _sys
-from pathlib import Path as _P
-_sys.path.insert(0, str(_P(__file__).resolve().parents[1] / "model"))
-from solve_all import (
+from model.solve_all import (
     C0, CZ_UP, CZ_DOWN, DT, PULSE_T0_STEPS, PULSE_TAU_STEPS,
     SOURCE_SIGMA_CELLS, SPONGE_LAYERS, SPONGE_STRENGTH,
     REG_Z_LOW, REG_Z_FULL, REG_LOW_FACTOR,
     grad_central, gaussian_source, solve_one,
 )
-from solve_coupled import trace_path
+from model.solve_coupled import trace_path
 from scipy.ndimage import map_coordinates, gaussian_filter
 
 

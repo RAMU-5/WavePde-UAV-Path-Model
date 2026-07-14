@@ -58,12 +58,20 @@ import jax.numpy as jnp
 from jax import jit
 from scipy.ndimage import map_coordinates
 
-from solve_all import (
-    build_static_fields_param, gaussian_source, solve_one,
-    N_STEPS, C0 as C0_DEFAULT, CZ_UP as CZ_UP_DEFAULT,
-    CZ_DOWN as CZ_DOWN_DEFAULT, WIND as WIND_DEFAULT,
-)
-from uav_dynamics import integrate_dynamics, UAVDynParams
+try:
+    from .solve_all import (
+        build_static_fields_param, gaussian_source, solve_one,
+        N_STEPS, C0 as C0_DEFAULT, CZ_UP as CZ_UP_DEFAULT,
+        CZ_DOWN as CZ_DOWN_DEFAULT, WIND as WIND_DEFAULT,
+    )
+    from .uav_dynamics import integrate_dynamics, UAVDynParams
+except ImportError:  # Support ``python model/solve_coupled.py``.
+    from solve_all import (
+        build_static_fields_param, gaussian_source, solve_one,
+        N_STEPS, C0 as C0_DEFAULT, CZ_UP as CZ_UP_DEFAULT,
+        CZ_DOWN as CZ_DOWN_DEFAULT, WIND as WIND_DEFAULT,
+    )
+    from uav_dynamics import integrate_dynamics, UAVDynParams
 
 THIS_DIR = _THIS
 

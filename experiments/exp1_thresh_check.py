@@ -10,18 +10,15 @@ threshold was tuned on); if they stay, the wave genuinely routes around
 sub-wavelength passages (E4.1 territory).
 """
 from __future__ import annotations
-import sys
 from pathlib import Path
 
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "model"))
-sys.path.insert(0, str(ROOT / "experiments"))
 
-from exp1_dijkstra_gt import nudge_stations  # noqa: E402
-import wave_api  # noqa: E402
-from wave_api import WaveConfig, build_static_fields  # noqa: E402
+from experiments.exp1_dijkstra_gt import nudge_stations  # noqa: E402
+import model.wave_api as wave_api  # noqa: E402
+from model.wave_api import WaveConfig, build_static_fields  # noqa: E402
 
 SOURCES = [80, 70, 10]
 MIN_PEAK = 1e-9

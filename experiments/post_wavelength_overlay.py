@@ -10,7 +10,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from test_wavelength import _simplify_path
+from experiments.test_wavelength import _simplify_path
 
 _THIS = Path(__file__).resolve().parent
 DOMAIN = _THIS.parent / "input" / "domain.npz"

@@ -11,7 +11,7 @@ regional aircraft (80 km domains).
 ## Repository layout
 
 ```
-model/         the method — PDE solvers (one leapfrog kernel in solve_all.py;
+model/         installable WavePDE package — PDE solvers (one leapfrog kernel in solve_all.py;
                backward/broadband/multicolor/coupled variants import it),
                wave_api.py (WaveConfig parameterised API) + plan.py
                (one-call plan_path) + path_trace.py (-∇T streamlines),
@@ -53,11 +53,11 @@ venv/          Python env with jax[cuda12] (gitignored)
 | `plan.py` + `path_trace.py` | One-call `plan_path`: solve → trace −∇T streamline → smooth | lib |
 
 There is exactly one implementation of the PDE step; every variant and
-the API layer import it from `solve_all.py`. Library quick start:
+the API layer import it from `solve_all.py`. Library quick start (from the
+repository root, or after `python -m pip install -e .`):
 
 ```python
-import sys; sys.path.insert(0, "<root>/model")
-from plan import plan_path
+from model import plan_path
 res = plan_path(mask, dx, dy, dz, src_xyz, dst_xyz)
 print(res.travel_time, res.status)
 ```
@@ -66,17 +66,18 @@ print(res.travel_time, res.status)
 
 ```bash
 # 0. (once) build domain from OSM
-venv/bin/python scripts/build_domain.py --dx 5 --dy 5 --dz 5 --out domain_5m.npz
+venv/bin/python -m scripts.build_domain --dx 5 --dy 5 --dz 5 --out domain_5m.npz
 # 1. 118 forward solves on GPU (one per array task)
 sbatch scripts/submit_array_5m.sh
 # 2. assemble 118×118 travel-time matrix
-venv/bin/python scripts/aggregate_pair_matrix.py --domain domain_5m.npz \
+venv/bin/python -m scripts.aggregate_pair_matrix --domain domain_5m.npz \
     --prefix T_source_5m_ --out pair_matrix_5m.npz
 # 3. downstream: database / scheduling / figures
-venv/bin/python scripts/build_database.py
+venv/bin/python -m scripts.build_database
 ```
 
-Quick correctness check (pure python, ~2 s): `python3 experiments/validation/back_sym_test.py`
+Quick correctness check (pure python, ~2 s):
+`python3 -m experiments.validation.back_sym_test`
 
 ## Validation caveats
 
@@ -88,3 +89,6 @@ paths stay clear of the outer boundary.
 See `docs/experiment_plan.md` for the paper experiment programme and
 `docs/paper_experiments_design.md` for the Results-section design
 (figures, tables, narrative).
+
+See `docs/code_structure.md` for package boundaries, dependency direction,
+installation and development commands.

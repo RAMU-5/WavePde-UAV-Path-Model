@@ -23,5 +23,5 @@ export OMP_NUM_THREADS=4
 export OPENBLAS_NUM_THREADS=4
 echo "=== $(hostname) ==="; date
 /leonardo_work/EUHPC_D25_028/miniconda3/bin/python3 -u \
-    scripts/check_collisions_kuwait.py
+    -m scripts.check_collisions_kuwait
 echo "=== done ==="; date

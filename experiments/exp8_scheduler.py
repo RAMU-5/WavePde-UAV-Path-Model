@@ -27,16 +27,14 @@ time, unassigned count. Outputs output/runs/exp8_scheduler/results.json.
 from __future__ import annotations
 import json
 import subprocess
-import sys
 import time
 from pathlib import Path
 
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "model"))
 
-from scheduler_meanfield import (  # noqa: E402
+from model.scheduler_meanfield import (  # noqa: E402
     mean_field_assign, hungarian_assign, evaluate)
 
 OUT_DIR = ROOT / "output" / "runs" / "exp8_scheduler"

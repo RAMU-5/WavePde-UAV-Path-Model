@@ -18,6 +18,6 @@ mkdir -p output/slurm_logs
 
 echo "=== minimal numpy backward-symmetry test on $(hostname) ==="
 date
-/leonardo/home/userexternal/yli00001/miniconda3/bin/python -u experiments/validation/validate_backward_minimal.py
+/leonardo/home/userexternal/yli00001/miniconda3/bin/python -u -m experiments.validation.validate_backward_minimal
 echo "=== done ==="
 date

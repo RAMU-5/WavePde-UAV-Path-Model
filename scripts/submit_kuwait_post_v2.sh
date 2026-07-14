@@ -22,7 +22,7 @@ DOM=kuwait_stations_v2.npz
 DB=database_kuwait_v2
 
 echo "=== $(hostname) ==="; date
-$PY -u scripts/aggregate_kuwait.py       --domain $DOM --dbdir $DB
-$PY -u scripts/check_collisions_kuwait.py --domain $DOM --dbdir $DB
-$PY -u scripts/viz_collisions_kuwait.py   --domain $DOM --dbdir $DB
+$PY -u -m scripts.aggregate_kuwait       --domain $DOM --dbdir $DB
+$PY -u -m scripts.check_collisions_kuwait --domain $DOM --dbdir $DB
+$PY -u -m scripts.viz_collisions_kuwait   --domain $DOM --dbdir $DB
 echo "=== done ==="; date

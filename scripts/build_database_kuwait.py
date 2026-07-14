@@ -19,7 +19,6 @@ Outputs per source i (output/database_kuwait/):
 from __future__ import annotations
 import argparse
 import os
-import sys
 import time
 from pathlib import Path
 
@@ -32,10 +31,9 @@ os.environ.setdefault("JAX_PERSISTENT_CACHE_MIN_ENTRY_SIZE_BYTES", "0")
 
 import numpy as np
 from scipy.ndimage import map_coordinates
-sys.path.insert(0, str(ROOT / "model"))
 import jax  # noqa: E402
-import wave_api  # noqa: E402
-from wave_api import WaveConfig, build_static_fields  # noqa: E402
+import model.wave_api as wave_api  # noqa: E402
+from model.wave_api import WaveConfig, build_static_fields  # noqa: E402
 
 LO_DIST_M, HI_DIST_M = 700.0, 3000.0
 

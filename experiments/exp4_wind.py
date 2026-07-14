@@ -35,7 +35,6 @@ tools/visualize/paper/fig07_wind.py.
 from __future__ import annotations
 import json
 import subprocess
-import sys
 import time
 from pathlib import Path
 
@@ -44,14 +43,12 @@ from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import dijkstra
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "model"))
-sys.path.insert(0, str(ROOT / "experiments"))
 
-from exp1_dijkstra_gt import (  # noqa: E402
+from experiments.exp1_dijkstra_gt import (  # noqa: E402
     C0, A_Z, W_UP, reg_of_z, nudge_stations, OFFSETS, reconstruct, los_free)
-import wave_api  # noqa: E402
-from wave_api import WaveConfig, StaticFields  # noqa: E402
-import solve_all as SA  # noqa: E402
+import model.wave_api as wave_api  # noqa: E402
+from model.wave_api import WaveConfig, StaticFields  # noqa: E402
+import model.solve_all as SA  # noqa: E402
 import jax  # noqa: E402
 import jax.numpy as jnp  # noqa: E402
 

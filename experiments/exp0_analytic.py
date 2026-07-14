@@ -44,17 +44,15 @@ import argparse
 import json
 import math
 import subprocess
-import sys
 import time
 from pathlib import Path
 
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "model"))
 
-import wave_api  # noqa: E402  (imports solve_all → sets JIT cache env)
-from wave_api import WaveConfig, build_static_fields, solve_forward  # noqa: E402
+import model.wave_api as wave_api  # noqa: E402  (imports solve_all → sets JIT cache env)
+from model.wave_api import WaveConfig, build_static_fields, solve_forward  # noqa: E402
 
 OUT_DIR = ROOT / "output" / "runs" / "exp0_analytic"
 

@@ -22,7 +22,7 @@ PY=/leonardo_work/EUHPC_D25_028/miniconda3/bin/python3
 
 echo "=== $(hostname) ==="; date
 echo "--- placing stations in gaps ---"
-$PY -u scripts/place_stations_gaps.py --n 64
+$PY -u -m scripts.place_stations_gaps --n 64
 echo "--- visualising collisions (current routes) ---"
-$PY -u scripts/viz_collisions_kuwait.py
+$PY -u -m scripts.viz_collisions_kuwait
 echo "=== done ==="; date

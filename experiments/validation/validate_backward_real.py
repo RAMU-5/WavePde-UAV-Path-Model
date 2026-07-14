@@ -31,11 +31,8 @@ jax.config.update("jax_enable_x64", False)
 import jax.numpy as jnp
 from jax import jit
 
-import sys as _sys
-from pathlib import Path as _P
-_sys.path.insert(0, str(_P(__file__).resolve().parents[2] / "model"))
-from solve_all import gaussian_source, solve_one, N_STEPS
-from solve_backward import build_backward_fields
+from model.solve_all import gaussian_source, solve_one, N_STEPS
+from model.solve_backward import build_backward_fields
 
 
 def main():

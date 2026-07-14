@@ -30,7 +30,7 @@ export OMP_NUM_THREADS=4
 export MKL_NUM_THREADS=4
 export XLA_FLAGS="--xla_cpu_multi_thread_eigen=true intra_op_parallelism_threads=4"
 
-$VENV/bin/python -u experiments/validation/validate_backward_real.py \
+$VENV/bin/python -u -m experiments.validation.validate_backward_real \
     --pair-file pair_matrix.npz --n-pairs 6 --n-origins-per-dst 8 \
     --min-t-fwd 60
 

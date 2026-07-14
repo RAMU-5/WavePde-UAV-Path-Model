@@ -45,9 +45,14 @@ jax.config.update("jax_enable_x64", False)
 import jax.numpy as jnp
 from jax import jit
 
-from solve_all import (
-    build_static_fields, gaussian_source, solve_one, N_STEPS,
-)
+try:
+    from .solve_all import (
+        build_static_fields, gaussian_source, solve_one, N_STEPS,
+    )
+except ImportError:  # Support ``python model/solve_multicolor.py``.
+    from solve_all import (
+        build_static_fields, gaussian_source, solve_one, N_STEPS,
+    )
 
 
 def conflict_graph(positions: np.ndarray, min_separation_m: float) -> dict:

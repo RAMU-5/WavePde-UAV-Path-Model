@@ -19,4 +19,4 @@ mkdir -p output/slurm_logs
 export OMP_NUM_THREADS=4
 export MKL_NUM_THREADS=4
 
-python3 -u scripts/build_database.py --source-idx ${SLURM_ARRAY_TASK_ID}
+python3 -u -m scripts.build_database --source-idx ${SLURM_ARRAY_TASK_ID}

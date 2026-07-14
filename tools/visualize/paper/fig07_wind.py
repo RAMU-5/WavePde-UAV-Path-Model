@@ -13,7 +13,6 @@ Reads  output/runs/exp4_wind/exp4_data.npz
 Writes paper/Q3/figs/fig07_wind.{png,pdf} + JSON summary
 """
 import json
-import sys
 from pathlib import Path
 
 import numpy as np
@@ -22,7 +21,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(ROOT / "model"))
 OUT = ROOT / "paper" / "Q3" / "figs"
 OUT.mkdir(parents=True, exist_ok=True)
 

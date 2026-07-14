@@ -20,17 +20,20 @@ from typing import Optional, Tuple, Literal
 
 import numpy as np
 
-from wave_api import (
-    WaveConfig,
-    StaticFields,
-    build_static_fields,
-    solve_forward,
-)
-from path_trace import (
-    trace_path_3d,
-    build_three_phase_path,
-    smooth_path,
-)
+try:  # Package import (preferred).
+    from .wave_api import (
+        WaveConfig, StaticFields, build_static_fields, solve_forward,
+    )
+    from .path_trace import (
+        trace_path_3d, build_three_phase_path, smooth_path,
+    )
+except ImportError:  # Keep direct execution from model/ compatible.
+    from wave_api import (
+        WaveConfig, StaticFields, build_static_fields, solve_forward,
+    )
+    from path_trace import (
+        trace_path_3d, build_three_phase_path, smooth_path,
+    )
 
 __all__ = ["PathResult", "snap_to_free_cell", "plan_path"]
 

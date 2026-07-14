@@ -29,7 +29,7 @@ export XLA_PYTHON_CLIENT_PREALLOCATE=false
 export OMP_NUM_THREADS=8
 export MKL_NUM_THREADS=8
 
-$VENV/bin/python -u scripts/build_database_kuwait.py \
+$VENV/bin/python -u -m scripts.build_database_kuwait \
     --domain kuwait_stations.npz \
     --source-idx ${SLURM_ARRAY_TASK_ID}
 

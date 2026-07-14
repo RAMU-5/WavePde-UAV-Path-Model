@@ -18,19 +18,16 @@ script; the production file is kept for the before/after comparison).
 """
 from __future__ import annotations
 import subprocess
-import sys
 import time
 from pathlib import Path
 
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "model"))
-sys.path.insert(0, str(ROOT / "experiments"))
 
-from exp1_dijkstra_gt import nudge_stations  # noqa: E402
-import wave_api  # noqa: E402
-from wave_api import WaveConfig, build_static_fields  # noqa: E402
+from experiments.exp1_dijkstra_gt import nudge_stations  # noqa: E402
+import model.wave_api as wave_api  # noqa: E402
+from model.wave_api import WaveConfig, build_static_fields  # noqa: E402
 
 OUT = ROOT / "output" / "wave" / "pair_matrix_5m_v2.npz"
 CHK = ROOT / "output" / "wave" / "pair_matrix_5m_v2_chk.npz"

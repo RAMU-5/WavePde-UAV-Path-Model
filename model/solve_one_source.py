@@ -35,16 +35,27 @@ jax.config.update("jax_enable_x64", False)
 import jax.numpy as jnp
 from jax import jit, lax
 
-# Import shared kernel functions from solve_all.py
-from solve_all import (
-    grad_central, lap_var_coef_axis, adv,
-    gaussian_source, build_static_fields,
-    step_kernel, solve_one,
-    C0, CZ_UP, CZ_DOWN, WIND, DT, N_STEPS,
-    PULSE_T0_STEPS, PULSE_TAU_STEPS, SOURCE_SIGMA_CELLS,
-    SPONGE_LAYERS, SPONGE_STRENGTH, MIN_PEAK_AMP,
-    REG_Z_LOW, REG_Z_FULL, REG_LOW_FACTOR,
-)
+# Import shared kernel functions from solve_all.py.
+try:
+    from .solve_all import (
+        grad_central, lap_var_coef_axis, adv,
+        gaussian_source, build_static_fields,
+        step_kernel, solve_one,
+        C0, CZ_UP, CZ_DOWN, WIND, DT, N_STEPS,
+        PULSE_T0_STEPS, PULSE_TAU_STEPS, SOURCE_SIGMA_CELLS,
+        SPONGE_LAYERS, SPONGE_STRENGTH, MIN_PEAK_AMP,
+        REG_Z_LOW, REG_Z_FULL, REG_LOW_FACTOR,
+    )
+except ImportError:  # Support ``python model/solve_one_source.py``.
+    from solve_all import (
+        grad_central, lap_var_coef_axis, adv,
+        gaussian_source, build_static_fields,
+        step_kernel, solve_one,
+        C0, CZ_UP, CZ_DOWN, WIND, DT, N_STEPS,
+        PULSE_T0_STEPS, PULSE_TAU_STEPS, SOURCE_SIGMA_CELLS,
+        SPONGE_LAYERS, SPONGE_STRENGTH, MIN_PEAK_AMP,
+        REG_Z_LOW, REG_Z_FULL, REG_LOW_FACTOR,
+    )
 
 
 def main():

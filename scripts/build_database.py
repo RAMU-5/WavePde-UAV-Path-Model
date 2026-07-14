@@ -41,10 +41,7 @@ import jax.numpy as jnp
 from jax import jit
 from scipy.ndimage import map_coordinates
 
-import sys as _sys
-from pathlib import Path as _P
-_sys.path.insert(0, str(_P(__file__).resolve().parents[1] / "model"))
-from solve_all import (
+from model.solve_all import (
     build_static_fields, gaussian_source, solve_one,
     N_STEPS,
 )

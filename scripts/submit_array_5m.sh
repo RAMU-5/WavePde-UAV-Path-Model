@@ -36,7 +36,7 @@ export XLA_PYTHON_CLIENT_PREALLOCATE=false
 export OMP_NUM_THREADS=8
 export MKL_NUM_THREADS=8
 
-$VENV/bin/python -u model/solve_one_source.py \
+$VENV/bin/python -u -m model.solve_one_source \
     --domain domain_5m.npz \
     --source-idx ${SLURM_ARRAY_TASK_ID} \
     --no-full \

@@ -19,7 +19,7 @@ cd /leonardo_work/EUHPC_D25_028/Levistone
 # Make sure jax can find CUDA (the GPU node has CUDA12 toolkit)
 unset JAX_PLATFORMS
 
-$VENV/bin/python experiments/exp_sk_wind.py \
+$VENV/bin/python -m experiments.exp_sk_wind \
     --t 3000 \
     --hi 320 --wi 320 \
     --nx 384 --ny 384 --nz 48 \

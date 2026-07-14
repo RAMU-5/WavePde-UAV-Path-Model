@@ -16,6 +16,6 @@ cd /leonardo_work/EUHPC_D25_028/Levistone
 export OMP_NUM_THREADS=4 OPENBLAS_NUM_THREADS=4
 PY=/leonardo_work/EUHPC_D25_028/miniconda3/bin/python3
 echo "=== $(hostname) ==="; date
-$PY -u scripts/viz_stations_kuwait.py --domain kuwait_stations_v2.npz
-$PY -u scripts/viz_stations_kuwait.py --domain kuwait_stations.npz
+$PY -u -m scripts.viz_stations_kuwait --domain kuwait_stations_v2.npz
+$PY -u -m scripts.viz_stations_kuwait --domain kuwait_stations.npz
 echo "=== done ==="; date

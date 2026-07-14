@@ -32,10 +32,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 
-import sys as _sys
-from pathlib import Path as _P
-_sys.path.insert(0, str(_P(__file__).resolve().parents[1] / "model"))
-import solve_all as SA
+import model.solve_all as SA
 
 
 # ---- Sweep config ------------------------------------------------------

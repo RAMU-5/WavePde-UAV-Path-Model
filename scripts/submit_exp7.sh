@@ -22,4 +22,4 @@ export XLA_PYTHON_CLIENT_PREALLOCATE=false
 # fresh compile cache so the "cold" timing is a true compile, not a
 # disk-cache hit (solve_all setdefaults a persistent cache dir)
 export JAX_COMPILATION_CACHE_DIR=$(mktemp -d /tmp/jaxcache_XXXX)
-venv/bin/python -u experiments/exp7_efficiency.py
+venv/bin/python -u -m experiments.exp7_efficiency

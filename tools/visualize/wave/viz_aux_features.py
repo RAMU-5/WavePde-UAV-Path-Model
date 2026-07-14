@@ -20,7 +20,6 @@ from __future__ import annotations
 import argparse
 import gc
 import os
-import sys
 import time
 from pathlib import Path
 
@@ -39,21 +38,20 @@ jax.config.update("jax_enable_x64", False)
 import jax.numpy as jnp
 from jax import jit
 
-sys.path.insert(0, str(ROOT / "model"))
-from solve_all import (build_static_fields, build_static_fields_param,
+from model.solve_all import (build_static_fields, build_static_fields_param,
                        gaussian_source, solve_one,
                        N_STEPS, C0, CZ_UP, CZ_DOWN, DT)
-from solve_backward import build_backward_fields
-from solve_multicolor import (conflict_graph, greedy_four_color,
+from model.solve_backward import build_backward_fields
+from model.solve_multicolor import (conflict_graph, greedy_four_color,
                               batched_source, estimate_min_separation)
-from solve_coupled import (run_coupled, trace_path)
-from solve_broadband import (solve_one_broadband,
+from model.solve_coupled import (run_coupled, trace_path)
+from model.solve_broadband import (solve_one_broadband,
                              DEF_TAU_L_STEPS, DEF_TAU_S_STEPS,
                              DEF_T0_L_STEPS, DEF_T0_S_STEPS,
                              DEF_OMEGA_S, DEF_PHI, broadband_amp)
-from wind_inversion import estimate_wind
-from uncertainty_diffusion import compute_uncertainty, monte_carlo_dispersion
-from winged_alignment import find_alignment_point, build_two_phase_trajectory
+from model.wind_inversion import estimate_wind
+from model.uncertainty_diffusion import compute_uncertainty, monte_carlo_dispersion
+from model.winged_alignment import find_alignment_point, build_two_phase_trajectory
 
 OUT_DIR = ROOT / "output" / "figures" / "aux"
 OUT_DIR.mkdir(parents=True, exist_ok=True)

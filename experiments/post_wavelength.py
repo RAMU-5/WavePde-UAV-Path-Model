@@ -8,7 +8,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 
-from test_wavelength import path_curvature_stats, _simplify_path
+from experiments.test_wavelength import path_curvature_stats, _simplify_path
 
 _THIS = Path(__file__).resolve().parent
 DOMAIN = _THIS.parent / "input" / "domain.npz"

@@ -22,7 +22,6 @@ Outputs output/runs/exp5_broadband/{exp5_data.npz, results.json}.
 from __future__ import annotations
 import json
 import subprocess
-import sys
 import time
 from pathlib import Path
 
@@ -30,14 +29,12 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "model"))
-sys.path.insert(0, str(ROOT / "experiments"))
 
-from exp1_dijkstra_gt import nudge_stations, polyline_time  # noqa: E402
-from exp3_wavelength_gap import make_cfg  # noqa: E402
-import wave_api  # noqa: E402
-from wave_api import build_static_fields  # noqa: E402
-from solve_coupled import trace_path  # noqa: E402
+from experiments.exp1_dijkstra_gt import nudge_stations, polyline_time  # noqa: E402
+from experiments.exp3_wavelength_gap import make_cfg  # noqa: E402
+import model.wave_api as wave_api  # noqa: E402
+from model.wave_api import build_static_fields  # noqa: E402
+from model.solve_coupled import trace_path  # noqa: E402
 
 OUT_DIR = ROOT / "output" / "runs" / "exp5_broadband"
 

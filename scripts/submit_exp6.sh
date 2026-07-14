@@ -20,4 +20,4 @@ set -euo pipefail
 cd /leonardo_work/EUHPC_D25_028/Levistone
 export JAX_PLATFORMS=cuda
 export XLA_PYTHON_CLIENT_PREALLOCATE=false
-venv/bin/python -u experiments/exp6_closure.py
+venv/bin/python -u -m experiments.exp6_closure

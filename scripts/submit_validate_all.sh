@@ -26,7 +26,7 @@ VENV=/leonardo_work/EUHPC_D25_028/Levistone/venv
 export OMP_NUM_THREADS=4
 export MKL_NUM_THREADS=4
 
-$VENV/bin/python -u experiments/validation/validate_all_real.py
+$VENV/bin/python -u -m experiments.validation.validate_all_real
 
 echo "=== done ==="
 date

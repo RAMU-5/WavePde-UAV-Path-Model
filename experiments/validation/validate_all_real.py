@@ -38,24 +38,21 @@ import jax.numpy as jnp
 from jax import jit
 
 sys.path.insert(0, str(THIS_DIR))
-import sys as _sys
-from pathlib import Path as _P
-_sys.path.insert(0, str(_P(__file__).resolve().parents[2] / "model"))
-from solve_all import (build_static_fields, build_static_fields_param,
+from model.solve_all import (build_static_fields, build_static_fields_param,
                        gaussian_source, solve_one,
                        N_STEPS, C0, CZ_UP, CZ_DOWN, WIND, DT)
-from solve_coupled import run_coupled, trace_path, decompose_speeds, update_params
-from solve_broadband import (solve_one_broadband,
+from model.solve_coupled import run_coupled, trace_path, decompose_speeds, update_params
+from model.solve_broadband import (solve_one_broadband,
                              DEF_TAU_L_STEPS, DEF_TAU_S_STEPS,
                              DEF_T0_L_STEPS, DEF_T0_S_STEPS,
                              DEF_OMEGA_S, DEF_PHI)
-from solve_multicolor import (conflict_graph, greedy_four_color,
+from model.solve_multicolor import (conflict_graph, greedy_four_color,
                               arrange_by_colour, batched_source,
                               estimate_min_separation)
-from winged_alignment import find_alignment_point, build_two_phase_trajectory
-from uav_dynamics import integrate_dynamics, UAVDynParams
-from wind_inversion import estimate_wind
-from uncertainty_diffusion import compute_uncertainty
+from model.winged_alignment import find_alignment_point, build_two_phase_trajectory
+from model.uav_dynamics import integrate_dynamics, UAVDynParams
+from model.wind_inversion import estimate_wind
+from model.uncertainty_diffusion import compute_uncertainty
 
 
 # --------------------------------------------------------------------- setup

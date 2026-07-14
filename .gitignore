@@ -6,6 +6,8 @@ __pycache__/
 _jax_cache/
 .ipynb_checkpoints/
 *.log
+*.out
+*.err
 
 # --- all generated artifacts live under output/ ---
 output/
@@ -18,5 +20,4 @@ memory/
 .claude/settings.local.json
 
 # small npz INPUTS are tracked explicitly: input/domain*.npz
-kuwait_cbd_v2_package
-experiments
+kuwait_cbd_v2_package/

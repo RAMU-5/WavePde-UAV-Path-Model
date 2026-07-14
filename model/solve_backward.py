@@ -46,11 +46,18 @@ from jax import jit
 # Re-use the forward solver's building blocks. solve_one is generic in
 # u,v,w so feeding it the negated fields produces the adjoint solve
 # without any duplicated PDE code.
-from solve_all import (
-    build_static_fields, gaussian_source, solve_one,
-    N_STEPS, THIS_DIR, OUT_DIR,
-    DT, PULSE_T0_STEPS, PULSE_TAU_STEPS, MIN_PEAK_AMP,
-)
+try:
+    from .solve_all import (
+        build_static_fields, gaussian_source, solve_one,
+        N_STEPS, THIS_DIR, OUT_DIR,
+        DT, PULSE_T0_STEPS, PULSE_TAU_STEPS, MIN_PEAK_AMP,
+    )
+except ImportError:  # Support ``python model/solve_backward.py``.
+    from solve_all import (
+        build_static_fields, gaussian_source, solve_one,
+        N_STEPS, THIS_DIR, OUT_DIR,
+        DT, PULSE_T0_STEPS, PULSE_TAU_STEPS, MIN_PEAK_AMP,
+    )
 
 
 def build_backward_fields(mask, dx, dy, dz):

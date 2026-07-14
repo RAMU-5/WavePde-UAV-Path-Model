@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wavepde-uav-path-model"
+version = "0.1.0"
+description = "UAV routing and fleet scheduling with a convected wave-equation solver"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["jax>=0.4", "numpy>=1.26", "scipy>=1.11"]
+
+[project.optional-dependencies]
+experiments = ["h5py>=3.10", "matplotlib>=3.8", "shapely>=2.0"]
+geo = ["affine>=2.4", "geopandas>=0.14", "osm2geojson>=0.2", "rasterio>=1.3"]
+dev = ["pytest>=7.4", "ruff>=0.4"]
+
+[tool.setuptools.packages.find]
+include = ["model*"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+extend-exclude = ["output", ".cache", "_jax_cache"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]

@@ -20,8 +20,8 @@ Conventions shared by every script here:
 - `solve_all.py` owns the kernel (`step_kernel`, `solve_one`,
   `build_static_fields`); all variants import from it — never duplicate
   the PDE step
-- scripts outside `model/` import these modules via
-  `sys.path.insert(0, <root>/model)`
+- import the reusable API from the repository root with
+  `from model import WaveConfig, plan_path`
 
 The parameterised library form lives here too: `wave_api.py` (WaveConfig
 dataclass over the same kernel, `solve_forward`/`solve_backward`),

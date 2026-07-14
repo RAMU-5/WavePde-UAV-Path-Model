@@ -26,7 +26,7 @@ export XLA_PYTHON_CLIENT_PREALLOCATE=false
 export OMP_NUM_THREADS=8
 export MKL_NUM_THREADS=8
 
-$VENV/bin/python -u scripts/run_kuwait_wave.py \
+$VENV/bin/python -u -m scripts.run_kuwait_wave \
     --domain kuwait_cbd_1024.npz \
     --wind 5 0 0 \
     --out kuwait_T.npz

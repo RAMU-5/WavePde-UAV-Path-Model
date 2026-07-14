@@ -16,4 +16,4 @@
 set -euo pipefail
 cd /leonardo_work/EUHPC_D25_028/Levistone
 export JAX_PLATFORMS=cpu
-venv/bin/python -u experiments/exp8_scheduler.py
+venv/bin/python -u -m experiments.exp8_scheduler

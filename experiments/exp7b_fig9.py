@@ -5,7 +5,6 @@ solve from station 50, smooth, trace to the same destination 49,
 overwrite output/runs/exp7_efficiency/fig9_multirotor.npz.
 """
 from __future__ import annotations
-import sys
 import time
 from pathlib import Path
 
@@ -13,15 +12,13 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "model"))
-sys.path.insert(0, str(ROOT / "experiments"))
 
-import wave_api  # noqa: E402
-from wave_api import WaveConfig  # noqa: E402
-from solve_coupled import trace_path  # noqa: E402
-from exp1_dijkstra_gt import polyline_time  # noqa: E402
-from exp5_broadband import path_collides  # noqa: E402
-from exp7_efficiency import production_station_cells, FIG9_SRC  # noqa: E402
+import model.wave_api as wave_api  # noqa: E402
+from model.wave_api import WaveConfig  # noqa: E402
+from model.solve_coupled import trace_path  # noqa: E402
+from experiments.exp1_dijkstra_gt import polyline_time  # noqa: E402
+from experiments.exp5_broadband import path_collides  # noqa: E402
+from experiments.exp7_efficiency import production_station_cells, FIG9_SRC  # noqa: E402
 
 OUT = ROOT / "output" / "runs" / "exp7_efficiency" / "fig9_multirotor.npz"
 DST = 49        # exp7's pick: farthest valid band partner of src 50

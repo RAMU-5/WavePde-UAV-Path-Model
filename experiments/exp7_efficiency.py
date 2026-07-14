@@ -23,7 +23,6 @@ Outputs output/runs/exp7_efficiency/{exp7_data.npz, results.json}.
 from __future__ import annotations
 import json
 import subprocess
-import sys
 import time
 from pathlib import Path
 
@@ -31,14 +30,12 @@ import numpy as np
 import jax
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "model"))
-sys.path.insert(0, str(ROOT / "experiments"))
 
-import wave_api  # noqa: E402
-from wave_api import WaveConfig, build_static_fields, flip_static_fields  # noqa: E402
-from solve_multicolor import arrange_by_colour  # noqa: E402
-from solve_coupled import trace_path  # noqa: E402
-from exp1_dijkstra_gt import polyline_time  # noqa: E402
+import model.wave_api as wave_api  # noqa: E402
+from model.wave_api import WaveConfig, build_static_fields, flip_static_fields  # noqa: E402
+from model.solve_multicolor import arrange_by_colour  # noqa: E402
+from model.solve_coupled import trace_path  # noqa: E402
+from experiments.exp1_dijkstra_gt import polyline_time  # noqa: E402
 
 OUT_DIR = ROOT / "output" / "runs" / "exp7_efficiency"
 

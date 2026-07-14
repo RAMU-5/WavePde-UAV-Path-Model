@@ -22,10 +22,7 @@ jax.config.update("jax_enable_x64", False)
 import jax.numpy as jnp
 from jax import jit
 
-import sys as _sys
-from pathlib import Path as _P
-_sys.path.insert(0, str(_P(__file__).resolve().parents[2] / "model"))
-from solve_all import (build_static_fields, gaussian_source, solve_one,
+from model.solve_all import (build_static_fields, gaussian_source, solve_one,
                        N_STEPS)
 
 

@@ -29,7 +29,7 @@ VENV=/leonardo_work/EUHPC_D25_028/Levistone/venv
 export OMP_NUM_THREADS=32
 export MKL_NUM_THREADS=32
 
-$VENV/bin/python -u experiments/exp1_dijkstra_gt.py \
+$VENV/bin/python -u -m experiments.exp1_dijkstra_gt \
     --domain domain_5m.npz \
     --sources 0,10,20,30,40,50,60,70,80,90,100,110
 

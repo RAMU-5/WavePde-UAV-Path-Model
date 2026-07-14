@@ -44,11 +44,18 @@ jax.config.update("jax_enable_x64", False)
 import jax.numpy as jnp
 from jax import jit, lax
 
-from solve_all import (
-    build_static_fields, gaussian_source,
-    grad_central, lap_var_coef_axis, adv,
-    DT, N_STEPS, MIN_PEAK_AMP,
-)
+try:
+    from .solve_all import (
+        build_static_fields, gaussian_source,
+        grad_central, lap_var_coef_axis, adv,
+        DT, N_STEPS, MIN_PEAK_AMP,
+    )
+except ImportError:  # Support ``python model/solve_broadband.py``.
+    from solve_all import (
+        build_static_fields, gaussian_source,
+        grad_central, lap_var_coef_axis, adv,
+        DT, N_STEPS, MIN_PEAK_AMP,
+    )
 
 THIS_DIR = _THIS
 

@@ -16,8 +16,7 @@ the validated solve_backward.build_backward_fields semantics:
 negate u, v, w; keep ax, ay, az (the (q·grad)q term is q-quadratic).
 
 Usage:
-    import sys; sys.path.insert(0, "<root>/model")
-    from wave_api import WaveConfig, solve_forward, solve_backward
+    from model import WaveConfig, solve_forward, solve_backward
     T = solve_forward(mask, dx, dy, dz, src_idx, cfg=WaveConfig(wind=(3,0,0)))
 """
 from __future__ import annotations
@@ -29,7 +28,10 @@ import jax
 import jax.numpy as jnp
 from jax import jit
 
-import solve_all as _sa
+try:  # Package import (preferred).
+    from . import solve_all as _sa
+except ImportError:  # Keep direct execution from model/ compatible.
+    import solve_all as _sa
 
 __all__ = [
     "WaveConfig",

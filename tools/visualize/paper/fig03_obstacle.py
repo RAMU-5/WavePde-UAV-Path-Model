@@ -11,7 +11,6 @@ Reads  output/runs/exp0_analytic/{results.json, exp0_data.npz}
 Writes paper/Q1/figs/fig03_obstacle.{png,pdf}
 """
 import json
-import sys
 from pathlib import Path
 
 import numpy as np
@@ -20,8 +19,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(ROOT / "model"))
-from path_trace import trace_path_3d  # noqa: E402
+from model.path_trace import trace_path_3d  # noqa: E402
 
 RUN = ROOT / "output" / "runs" / "exp0_analytic"
 OUT = ROOT / "paper" / "Q1" / "figs"
