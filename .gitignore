@@ -18,3 +18,5 @@ memory/
 .claude/settings.local.json
 
 # small npz INPUTS are tracked explicitly: input/domain*.npz
+kuwait_cbd_v2_package
+experiments
