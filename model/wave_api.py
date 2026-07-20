@@ -70,6 +70,11 @@ class WaveConfig:
     # misses weak first arrivals (see paper/Q2).
     min_peak_amp: float = _sa.MIN_PEAK_AMP
 
+    # Coefficient of div(D_diff grad(d psi/dt)), in m^2/s. The default
+    # disables this optional uncertainty-aware smoothing term and preserves
+    # all existing solver results.
+    diffusivity_m2_s: float = 0.0
+
     reg_z_low: float = _sa.REG_Z_LOW
     reg_z_full: float = _sa.REG_Z_FULL
     reg_low_factor: float = _sa.REG_LOW_FACTOR
@@ -89,6 +94,7 @@ class StaticFields:
     az: jnp.ndarray
     one_minus_damp: jnp.ndarray
     free: jnp.ndarray
+    diffusivity: Optional[jnp.ndarray] = None
 
 
 def build_static_fields(mask, dx, dy, dz,
@@ -104,11 +110,17 @@ def build_static_fields(mask, dx, dy, dz,
         reg_z_low=cfg.reg_z_low, reg_z_full=cfg.reg_z_full,
         reg_low_factor=cfg.reg_low_factor,
     )
+    diffusivity = None
+    if cfg.diffusivity_m2_s < 0.0:
+        raise ValueError("diffusivity_m2_s must be non-negative")
+    if cfg.diffusivity_m2_s > 0.0:
+        diffusivity = jnp.full(mask.shape, cfg.diffusivity_m2_s,
+                               dtype=jnp.float32) * s["free"]
     return StaticFields(
         c2_xy=s["c2_xy"], c2_z=s["c2_z"], u=s["u"], v=s["v"], w=s["w"],
         ax=s["ax"], ay=s["ay"], az=s["az"],
         one_minus_damp=(1.0 - s["damp"]).astype(jnp.float32),
-        free=s["free"],
+        free=s["free"], diffusivity=diffusivity,
     )
 
 
@@ -119,6 +131,15 @@ _solve_jit = jit(_sa.solve_one, static_argnums=(11, 12, 13, 14, 15, 16, 17, 18))
 
 def _run(static: StaticFields, src_idx, dx, dy, dz,
          cfg: WaveConfig) -> np.ndarray:
+    # Conservative explicit stability bound for the velocity-diffusion
+    # term. It is inactive for the baseline solver.
+    diffusion_number = (2.0 * cfg.diffusivity_m2_s * cfg.dt
+                        * (dx ** -2 + dy ** -2 + dz ** -2))
+    if diffusion_number > 1.0:
+        raise ValueError(
+            "explicit uncertainty diffusion is unstable: "
+            f"2*D*dt*sum(1/h^2)={diffusion_number:.3f} > 1"
+        )
     src = _sa.gaussian_source(static.free.shape, src_idx,
                               sigma=cfg.source_sigma_cells)
     T = _solve_jit(static.c2_xy, static.c2_z,
@@ -127,7 +148,7 @@ def _run(static: StaticFields, src_idx, dx, dy, dz,
                    static.one_minus_damp, static.free, src,
                    dx, dy, dz, cfg.n_steps,
                    cfg.dt, cfg.pulse_t0_steps, cfg.pulse_tau_steps,
-                   cfg.min_peak_amp)
+                   cfg.min_peak_amp, static.diffusivity)
     jax.block_until_ready(T)
     return np.asarray(jax.device_get(T))
 
@@ -155,6 +176,7 @@ def flip_static_fields(static: StaticFields) -> StaticFields:
         u=-static.u, v=-static.v, w=-static.w,
         ax=static.ax, ay=static.ay, az=static.az,
         one_minus_damp=static.one_minus_damp, free=static.free,
+        diffusivity=static.diffusivity,
     )
 
 

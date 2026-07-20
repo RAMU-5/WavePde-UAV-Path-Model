@@ -17,6 +17,7 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FixedLocator, FixedFormatter
 
 ROOT = Path(__file__).resolve().parents[3]
 from model.path_trace import trace_path_3d  # noqa: E402
@@ -52,7 +53,8 @@ geo_z = [sz, 60, 60, dzm]
 ax.plot(geo_x, geo_z, "w--", lw=1.2, label="exact geodesic")
 ax.plot([sx], [sz], "r*", ms=11)
 ax.plot([dxm], [dzm], "rs", ms=6)
-ax.set_xlabel("x [m]"); ax.set_ylabel("z [m]")
+ax.set_xlabel("x [m]")
+ax.set_ylabel("z [m]")
 ax.set_title(f"(a) T(x,z) slice at dx = {dx:g} m; T* = {Tstar:.2f} s",
              fontsize=9)
 ax.legend(fontsize=8, loc="upper right")
@@ -62,9 +64,14 @@ runs = sorted(res, key=lambda r: -r["dx"])
 ax2.semilogx([r["dx"] for r in runs],
              [100 * r["rel_gap"] for r in runs], "o-")
 for r in runs:
+    offset_y = -15 if r["rel_gap"] == max(x["rel_gap"] for x in runs) else 5
     ax2.annotate(f"{100*r['rel_gap']:+.2f}%", (r["dx"], 100 * r["rel_gap"]),
-                 textcoords="offset points", xytext=(6, 5), fontsize=8)
+                 textcoords="offset points", xytext=(6, offset_y), fontsize=8)
 ax2.axhline(0, color="k", lw=0.7)
+tick_values = [1.25, 2.5, 5.0, 10.0]
+ax2.xaxis.set_major_locator(FixedLocator(tick_values))
+ax2.xaxis.set_major_formatter(FixedFormatter(["1.25", "2.5", "5", "10"]))
+ax2.xaxis.set_minor_locator(FixedLocator([]))
 ax2.set_xlabel("grid spacing dx [m]")
 ax2.set_ylabel("arrival-time gap vs exact geodesic [%]")
 ax2.set_title("(b) calibrated gap vs taut-string time", fontsize=9)

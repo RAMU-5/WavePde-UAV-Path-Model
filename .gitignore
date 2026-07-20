@@ -1,5 +1,6 @@
 # --- environments & caches ---
 venv/
+*.egg-info/
 .cache/
 __pycache__/
 *.pyc

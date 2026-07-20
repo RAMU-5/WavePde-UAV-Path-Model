@@ -6,15 +6,15 @@ Public surface:
   - solve_all_pairs(field, grid, station_xys)            -> AllPairsDB
   - resolve_affected_sources(field, grid, db, sources)   -> updated AllPairsDB
 
-agd is lazily imported. If the GPU build is unavailable, the solver falls back
-to AGD's CPU `Riemann3` model with an isotropic-tilt approximation (warning logged).
+agd is lazily imported. If the CUDA ``Rander3`` backend is unavailable, the
+solver falls back to the sparse isotropic Dijkstra implementation below.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field as dc_field
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Tuple
 
 import numpy as np
 
@@ -46,10 +46,21 @@ class AllPairsDB:
         return list(self.pairs.keys())
 
 
-def _ensure_agd():
+def _ensure_agd(backend: str = "cpu") -> bool:
+    """Return whether the requested AGD backend can solve ``Rander3``.
+
+    The FileHFM CPU distribution does not provide a three-dimensional
+    Randers model.  AGD's CUDA implementation does, so an importable Python
+    package alone is not sufficient evidence that the requested solve will
+    work.
+    """
+    if backend != "cuda":
+        return False
     try:
         import agd  # noqa: F401
-        return True
+        import cupy as cp
+
+        return cp.cuda.runtime.getDeviceCount() > 0
     except Exception:
         return False
 
@@ -58,17 +69,20 @@ def _solve_agd_rander(field: RanderField, grid: SimGrid,
                       src_xyz: Tuple[float, float, float],
                       backend: str = "cpu") -> np.ndarray:
     """Call AGD HFM, return arrival field (nx, ny, nz)."""
-    from agd import Eikonal
+    if backend != "cuda":
+        raise RuntimeError("AGD Rander3 is available only through its CUDA backend")
+
+    from agd import Eikonal, Metrics
     nx, ny, nz = grid.shape3
-    h = (grid.dx, grid.dy, grid.dz)
     omega = np.moveaxis(field.rander_omega, -1, 0)  # (3, nx, ny, nz)
-    riemann = np.zeros((6, nx, ny, nz), dtype=np.float32)
+    riemann = np.zeros((3, 3, nx, ny, nz), dtype=np.float32)
     diag = field.riemann_diag  # (nx, ny, nz, 3)
-    riemann[0] = diag[..., 0]
-    riemann[1] = diag[..., 1]
-    riemann[2] = diag[..., 2]
-    metric = (riemann, omega)
+    riemann[0, 0] = diag[..., 0]
+    riemann[1, 1] = diag[..., 1]
+    riemann[2, 2] = diag[..., 2]
+    metric = Metrics.Rander(riemann, omega)
     hfm = Eikonal.dictIn({
+        "mode": "gpu_transfer",
         "model": "Rander3",
         "metric": metric,
         "seeds": np.asarray([src_xyz], dtype=np.float64),
@@ -79,11 +93,9 @@ def _solve_agd_rander(field: RanderField, grid: SimGrid,
         [grid.origin_xy[0], grid.origin_xy[0] + grid.size_xy[0]],
         [grid.origin_xy[1], grid.origin_xy[1] + grid.size_xy[1]],
         [grid.z_min, grid.z_max],
-    ], dimx=nx)
+    ], dims=(nx, ny, nz))
     if field.walls is not None:
         hfm["walls"] = field.walls
-    if backend == "cuda":
-        hfm["solver"] = "AGSI"
     out = hfm.Run()
     T = np.asarray(out["values"], dtype=np.float32)
     return T.reshape((nx, ny, nz))
@@ -92,7 +104,7 @@ def _solve_agd_rander(field: RanderField, grid: SimGrid,
 def solve_single_source(field: RanderField, grid: SimGrid,
                         src_xyz: Tuple[float, float, float],
                         backend: str = "cpu") -> ArrivalField:
-    if not _ensure_agd():
+    if not _ensure_agd(backend):
         T = _fallback_isotropic_arrival(field, grid, src_xyz)
     else:
         T = _solve_agd_rander(field, grid, src_xyz, backend=backend)
@@ -340,7 +352,8 @@ def _solve_chunk_worker(payload):
                 v_cruise=field.v_cruise,
                 gradient_T=gT,
             )
-            traj.src = int(sid); traj.dst = int(did)
+            traj.src = int(sid)
+            traj.dst = int(did)
             out[(int(sid), int(did))] = traj
     return out, arrivals_out
 
@@ -366,12 +379,7 @@ def solve_all_pairs(field: RanderField, grid: SimGrid,
     """
     db = AllPairsDB(grid=grid, metric_version=field.metric_version)
     n = len(station_xys)
-    src_xyzs = np.column_stack([
-        station_xys[:, 0], station_xys[:, 1],
-        np.full(n, float(station_z_m)),
-    ])
-
-    have_agd = _ensure_agd()
+    have_agd = _ensure_agd(backend)
     if have_agd:
         for sid in range(n):
             sx, sy = station_xys[sid]
@@ -393,7 +401,8 @@ def solve_all_pairs(field: RanderField, grid: SimGrid,
                     trajectory_dt_s=trajectory_dt_s,
                     v_cruise=field.v_cruise, gradient_T=gT,
                 )
-                traj.src = sid; traj.dst = did
+                traj.src = sid
+                traj.dst = did
                 db.pairs[(sid, did)] = traj
             if progress_cb:
                 progress_cb(sid + 1, n)
@@ -433,7 +442,8 @@ def solve_all_pairs(field: RanderField, grid: SimGrid,
 
 
 def save_db(db: AllPairsDB, path: str | Path) -> None:
-    path = Path(path); path.mkdir(parents=True, exist_ok=True)
+    path = Path(path)
+    path.mkdir(parents=True, exist_ok=True)
     import pickle
     with open(path / "trajectories.pkl", "wb") as f:
         pickle.dump({"pairs": db.pairs, "metric_version": db.metric_version},

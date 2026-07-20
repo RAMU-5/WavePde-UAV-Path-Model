@@ -36,7 +36,11 @@ Fourth, \emph{where does it break?} We measure the wavelength
 operating envelope and the behaviour under spatially varying,
 non-solenoidal wind (\S\ref{sec:robustness}), and close with a
 scale-transfer demonstration from a delivery multirotor to a regional
-aircraft (\S\ref{sec:transfer}).
+aircraft (\S\ref{sec:transfer}). We additionally qualify positional
+uncertainty in a controlled zero-wind obstacle test
+(\S\ref{sec:uncertainty-results}), then test concurrent UAV execution
+and a continuously time-varying velocity field
+(\S\ref{sec:dynamic-operations}).
 
 % ---------------------------------------------------------------------
 \subsection{Experimental setup}
@@ -98,7 +102,9 @@ which is subtracted from all arrival times reported below.
 \includegraphics[width=\linewidth]{fig01_convergence}
 \caption{Free-space accuracy. (a)~Relative arrival-time error versus
 grid spacing for four pulse widths; (b)~measured arrival bias versus
-the source peak time $t_0$, confirming the linear calibration model.}
+the source peak time $t_0$, confirming the linear calibration model.
+Errors are evaluated on journeys of $170$--$250\,$m, corresponding to
+exact travel times of $11.3$--$16.7\,$s at $c_0=15\,$m/s.}
 \label{fig:convergence}
 \end{figure}
 
@@ -116,7 +122,12 @@ versus the exact $d/c_z^{\uparrow}$ and $d/c_z^{\downarrow}$ lines.}
 \centering
 \includegraphics[width=0.85\linewidth]{fig03_obstacle}
 \caption{Single-obstacle benchmark: first-arrival field and traced
-path versus the exact taut-string geodesic over the box.}
+path versus the exact taut-string geodesic over the box. The exact
+journey time in panel~(a) is $12.87\,$s. Across the four cell-centred
+grids, the resolution-dependent reference times span
+$12.80$--$13.27\,$s and the calibrated numerical times span
+$12.75$--$13.32\,$s. Panel~(b) reports the signed relative gap after
+removal of the independently measured source-pulse bias.}
 \label{fig:obstacle}
 \end{figure}
 
@@ -161,6 +172,124 @@ path is homotopic to and geometrically close to the geodesic.
 Diffraction and shadow zones are handled correctly --- the regime
 that defeats straight-line heuristics.
 
+\subsubsection{Uncertainty qualification without prescribed wind}
+\label{sec:uncertainty-results}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{fig10_uncertainty}
+\caption{Controlled positional-uncertainty experiment on the
+single-obstacle geometry at $5\,$m resolution and zero prescribed wind.
+(a)~Nominal paths obtained for constant
+$D_{\mathrm{diff}}\in\{0,0.5,1,2.5,5,10,20\}\,\mathrm{m^2\,s^{-1}}$;
+(b)~nominal obstacle clearance minus the exact three-dimensional
+$95\%$ radial confidence radius along each path, where negative values
+indicate that the uncertainty tube intersects the obstacle;
+(c)~Monte Carlo collision probability from $4000$ trajectories per
+diffusivity, with Wilson $95\%$ confidence intervals. The nominal
+journey time remains $13.06$--$13.11\,$s across the sweep.}
+\label{fig:uncertainty}
+\end{figure}
+
+We isolate uncertainty from wind by setting the prescribed velocity
+field to zero and repeating the single-box benchmark of
+Fig.~\ref{fig:obstacle}. For each constant $D_{\mathrm{diff}}$, an empty
+companion solve removes the source-peak timing bias, after which the
+arrival-time field is traced and $4000$ independent Brownian
+realisations are sampled around the nominal trajectory. The exact
+three-dimensional confidence radius is
+$r_{95}=\sqrt{2\tau\chi^2_{3,0.95}}$, with
+$\tau(t)=\int_0^t D_{\mathrm{diff}}\,\mathrm{d}t$. The sampled terminal
+error p95 agrees with this analytical radius to within $2.8\%$ at every
+non-zero diffusivity, providing an internal calibration check on the
+uncertainty sampler.
+
+The nominal route is insensitive to constant diffusivity at this
+resolution: its travel time varies by less than $0.4\%$ and its minimum
+clearance remains between $3.38$ and $4.31\,$m, with no monotonic
+clearance increase (Fig.~\ref{fig:uncertainty}a). The stochastic safety
+metrics, however, change strongly. At
+$D_{\mathrm{diff}}=0.5\,\mathrm{m^2\,s^{-1}}$, $r_{95}=10.11\,$m and
+the estimated collision probability is $17.75\%$ (Wilson $95\%$ CI
+$16.60$--$18.96\%$); at $20\,\mathrm{m^2\,s^{-1}}$ these increase to
+$63.98\,$m and $66.10\%$ ($64.62$--$67.55\%$), respectively. Thus the
+diffusion model provides a quantitative risk envelope, but smoothing
+of the wave field alone does not produce a monotonic geometric safety
+margin in this benchmark. A clearance or chance constraint must be
+applied to the uncertainty envelope if a prescribed collision-risk
+tolerance is required.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{fig11_diffusion_resolution}
+\caption{Grid sensitivity of constant uncertainty diffusion in the
+zero-wind single-obstacle benchmark. (a)~Shift of the fitted empty-domain
+peak-propagation speed relative to $D_{\mathrm{diff}}=0$ on each grid;
+(b)~minimum nominal path clearance; (c)~nominal path time. The red cross
+marks a tracer failure at $\Delta x=2.5\,$m and
+$D_{\mathrm{diff}}=20\,\mathrm{m^2\,s^{-1}}$, where the explicit
+diffusion number is $N_D=0.96$.}
+\label{fig:uncertainty-resolution}
+\end{figure}
+
+\paragraph{Resolution and operational stability
+(Fig.~\ref{fig:uncertainty-resolution}).}
+Repeating the sweep at $\Delta x\in\{10,5,2.5\}\,$m shows that the
+nominal path-time response remains below $0.43\%$ for every successful
+case with $D_{\mathrm{diff}}\le10\,\mathrm{m^2\,s^{-1}}$. At the
+finest resolution, minimum clearance increases consistently from
+$1.44\,$m at $D_{\mathrm{diff}}=0$ to $1.84\,$m at
+$10\,\mathrm{m^2\,s^{-1}}$, whereas the $5$ and $10\,$m grids show
+non-monotonic cell-scale variations. The implicit geometric offset is
+therefore weak (about $0.4\,$m in this benchmark) and can be obscured by
+coarse discretisation; it is not a substitute for the explicit
+confidence envelope. Diffusion also shifts the detected empty-domain
+wave peak by $3.2$--$6.2\%$ at $D_{\mathrm{diff}}=10$, with the larger
+shift on the finer grid. At $N_D=0.96$ the formal explicit bound is
+still satisfied, but the $2.5\,$m tracer fails. We consequently use
+$N_D\le0.5$ as the empirical operating limit rather than running up to
+the formal bound $N_D\le1$.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{fig12_nanshan_uq}
+\caption{Zero-wind uncertainty qualification on the $5\,$m Nanshan
+geometry ($8.1\times10^7$ cells). (a)~Three routes from station 50 over
+the building-footprint map; (b)~building-collision probability from
+$4000$ Monte Carlo trajectories per route and diffusivity, with Wilson
+$95\%$ intervals; (c)~minimum building clearance minus the local
+three-dimensional $r_{95}$. Domain-exit events, including excursions
+below ground near the $7.5\,$m-high endpoints, are recorded separately
+and are not counted in panel (b).}
+\label{fig:uncertainty-nanshan}
+\end{figure}
+
+\paragraph{Transfer to a real urban geometry
+(Fig.~\ref{fig:uncertainty-nanshan}).}
+We next use the full Nanshan mask without a prescribed wind field. One
+solve from station 50 serves destinations 17, 19 and 20, separated by
+$1.04$, $1.37$ and $2.48\,$km. Their nominal path times are $108.6$,
+$132.1$ and $217.6\,$s and their minimum building clearances are
+$2.5$, $7.1$ and $12.8\,$m, respectively. At
+$D_{\mathrm{diff}}=0.02\,\mathrm{m^2\,s^{-1}}$ the narrowest route
+already has a $9.28\%$ building-collision probability (Wilson $95\%$
+CI $8.41$--$10.21\%$), while neither of the other routes records a
+building collision in $4000$ samples (upper bound $0.10\%$). At
+$D_{\mathrm{diff}}=0.5\,\mathrm{m^2\,s^{-1}}$ the three building-risk
+estimates are $26.05\%$, $25.23\%$ and $1.33\%$. Thus path duration
+alone is not a risk surrogate: local clearance controls whether the
+growing uncertainty cloud intersects the urban geometry.
+
+Domain exits are a distinct failure mode. At
+$D_{\mathrm{diff}}=0.5\,\mathrm{m^2\,s^{-1}}$ they occur in $24.8$--
+$32.5\%$ of samples and are dominated by accumulated vertical
+dispersion near the low-altitude endpoints. This exposes the limit of
+uncontrolled isotropic Brownian propagation during take-off and
+landing: a practical planner must reduce or reset uncertainty using
+localisation feedback and a controlled terminal-flight model. We keep
+these events separate from building collisions so that the city-geometry
+and terminal-control effects are not conflated.
+
 \begin{table}[t]
 \centering
 \caption{Machine-checkable verification suite (no additional solver
@@ -196,11 +325,14 @@ superposition) at machine precision.
 \centering
 \includegraphics[width=\linewidth]{fig04_groundtruth}
 \caption{Wave arrival times versus the discrete ground truth on the
-Nanshan domain. (a)~$555$ valid station pairs at $5\,$m, calibrated
-wave time versus Dijkstra + metric-aware string-pulling;
-(b)~optimality-gap histograms: production detector before the
-threshold fix (grey), $50\,$m resolution (red), corrected $5\,$m
-(blue).}
+Nanshan domain. (a)~For $555$ station pairs separated by
+$700$--$3000\,$m, calibrated wave time is compared with a
+$26$-neighbour Dijkstra path shortened by collision-free line-of-sight
+segments whenever the continuous metric time decreases.
+(b)~Optimality-gap distributions show the old fixed detection
+threshold at $5\,$m (grey, long positive tail), the under-resolved
+$50\,$m grid (red), and the corrected resolution-scaled threshold at
+$5\,$m (blue, compact distribution).}
 \label{fig:groundtruth}
 \end{figure}
 
@@ -265,15 +397,58 @@ Accuracy & $-4.1\%$ median / $6.4\%$ p95 vs.\ reference & $+1.1\%$ angular bias 
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:comparison} summarises the honest comparison: for a
-single source the two approaches are of the same order, and the
-graph search is a strong baseline. The wave formulation wins on
-(a)~the asymptotics of multi-destination problems via reciprocity and
-superposition (next subsection), (b)~physical generality --- wind,
-anisotropy and regulatory layers enter as coefficients with no
-re-derivation of an edge metric --- and (c)~memory and the
-continuously differentiable $T$ field from which paths follow by
-gradient descent.
+\begin{table}[t]
+\centering
+\caption{CUDA fast-marching baseline on Nanshan. Times are JIT-warm
+wall-clock measurements on one RTX~5090 and are not compared directly
+with the A100 wave timings in Table~\ref{tab:comparison}.}
+\label{tab:fmm-baseline}
+\small
+\begin{tabular}{lll}
+\toprule
+ & $50\,$m full matrix & $5\,$m single source (station 50) \\
+\midrule
+Grid cells & $2.87\times10^5$ & $8.08\times10^7$ \\
+Scope & 118 sources, 5522 valid pairs & 1 source, 118 endpoints \\
+Finite endpoints & $100\%$ & $100\%$ \\
+Steady single-source time & $7.83\,$ms & $0.755\,$s \\
+CuPy memory-pool peak & $0.84\,$GB & $25.97\,$GB \\
+Reference agreement & $+1.37\%$ median; $6.57\%$ p95 absolute & $1.30\%$ median; $2.98\%$ max\footnotemark \\
+\bottomrule
+\end{tabular}
+\end{table}
+\footnotetext{The $50\,$m values are against Dijkstra plus
+metric-aware string-pulling over the common 700--3000 m validity band.
+The $5\,$m values are three pre-registered endpoints (stations 17, 19
+and 20) against the calibrated zero-diffusion wave arrivals from
+Fig.~\ref{fig:uncertainty-nanshan}; they are an anchor check, not a full-matrix
+accuracy estimate.}
+
+\paragraph{Fast marching (Table~\ref{tab:fmm-baseline}).}
+For a continuous-field baseline we convert the same horizontal
+regulation, $5\,$m/s vertical control speed and $+1\,$m/s vertical
+drift exactly to a three-dimensional Randers metric and solve it with
+AGD's CUDA \texttt{Rander3} implementation. The algebraic conversion
+matches the closed-form edge travel time to $4.2\times10^{-16}$ in a
+1000-vector numerical check. On the complete $50\,$m station matrix,
+all endpoints are finite and FMM differs from the feasible
+string-pulled reference by $+1.37\%$ at the median and $6.57\%$ at the
+p95 absolute level. The two directions of each pair agree to within
+$0.16\%$ at p95, as expected here because the vertical Randers
+one-form integrates to zero between equal-altitude endpoints.
+
+The $5\,$m solve demonstrates that the 5090 can hold the full
+$1333\times1443\times42$ problem, but with little margin: the CuPy
+pool reaches $25.97\,$GB. After one allocation/warm-up pass, four
+repeats take $0.743$--$0.770\,$s (median $0.755\,$s). This is a strong
+result for FMM, not a speed claim for the wave solver: in a frozen,
+deterministic single-source metric, CUDA fast marching is the more
+efficient tool. Table~\ref{tab:comparison} still shows that an
+explicit graph is costly, while the distinctive benefits tested for
+the wave formulation below are linear source superposition,
+transient-field physics and its extension to diffusion-based
+uncertainty---not superiority over specialised FMM on its native
+static problem.
 
 % ---------------------------------------------------------------------
 \subsection{Efficiency: adjoint, superposition, throughput}
@@ -284,11 +459,15 @@ gradient descent.
 \includegraphics[width=\linewidth]{fig05_pipelines}
 \caption{Efficiency measurements on the $5\,$m domain.
 (a)~Crosstalk of batched (superposed-source) solves versus source
-separation; the empirical safe threshold coincides with the
-theoretical disk-overlap criterion at twice the pairing radius.
-(b)~Full-matrix wall time versus colouring separation (bar labels:
-number of solves); hatched bars are corrupted per (a).
-(c)~End-to-end pipelines with measured accuracy annotations.}
+separation: blue gives the maximum pair-time error, orange the
+uncontaminated-pair fraction, and the dashed line marks the $6\,$km
+safe threshold at twice the pairing radius. (b)~Full-matrix wall time
+versus graph-colouring separation; numbers above bars are solve counts
+and hatching marks configurations rejected by panel~(a). (c)~Measured
+end-to-end cost: multicolour batching reduces the 118-source matrix
+from 118 to 82 solves at $0.4\%$ maximum error, while one adjoint solve
+replaces 118 forward solves for a destination column at median
+$0.35\%$ and p95 $1.0\%$ disagreement.}
 \label{fig:pipelines}
 \end{figure}
 
@@ -439,6 +618,59 @@ recovered from $1254$ noisy track segments halves the
 route-time error versus ignoring wind, median $8.5\% \to 3.8\%$),
 while the wave--dynamics fixed-point iteration converges in a median
 of $4$ iterations from varied initialisations.
+
+% ---------------------------------------------------------------------
+\subsection{Concurrent UAVs and dynamic velocity}
+\label{sec:dynamic-operations}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{fig13_dynamic_operations}
+\caption{Operational stress tests. (a)~Twenty closed-loop missions on
+the $50\,$m Nanshan geometry, formed from ten reciprocal station pairs;
+each colour denotes the two directions of one obstacle-aware route.
+(b)~Number of UAV pairs whose realised separation falls below $50\,$m
+when every mission launches at $t=0$ and after delay-only CBS
+coordination; the black curve gives the coordinated mean launch delay.
+(c)~P95 absolute arrival-time gap against the analytic solution in an
+empty $600\,$m cube with a spatially uniform velocity of magnitude
+$4.5\,$m/s rotating with the indicated period. Results are shown for
+the time-varying solver, a velocity frozen at emission, and an ablation
+that omits $\partial_t q$.}
+\label{fig:dynamic-operations}
+\end{figure}
+
+Figure~\ref{fig:dynamic-operations}(a,b) tests whether nominal routes
+remain usable when flown concurrently. We deliberately choose
+reciprocal station pairs, an adversarial zero-wind case in which every
+pair attempts to traverse the same route head-on. Simultaneous launch
+produces $5$, $10$, and $28$ conflicting UAV pairs for fleets of $10$,
+$20$, and $40$ missions. Delay-only CBS accepts every mission and
+reduces this count to zero in all three cases. The smallest realised
+separation over the coordinated runs is $119.4\,$m, above the
+$50\,$m threshold; the mean launch delays are $68.5$, $68.5$, and
+$70.2\,$s, respectively. These are closed-loop point-mass simulations,
+not reservation-only checks: the P95 tracking error remains below
+$1.60\,$m and no simulated sample enters a building. The result
+therefore establishes feasibility for this deliberately conflicting
+traffic pattern, while the delay and doubled makespan quantify the
+price of the conservative delay-only policy.
+
+Figure~\ref{fig:dynamic-operations}(c) isolates temporal variation in
+the advection velocity without introducing an unverified atmospheric
+dataset. For a spatially uniform rotating field, the exact arrival time
+is obtained from
+$\lVert x-x_s-\int_{t_0}^{t}q(\tau)\,\mathrm d\tau\rVert=c_0(t-t_0)$.
+Across $16$ directions, the calibrated dynamic solver has P95 absolute
+gaps of $1.36\%$, $1.46\%$, and $1.68\%$ for rotation periods of
+$20$, $40$, and $80\,$s. Freezing $q$ at emission instead gives
+$47.03\%$, $30.21\%$, and $15.90\%$. Omitting $\partial_tq$ gives
+$1.78\%$, $1.79\%$, and $1.68\%$ in this uniform-flow case. Thus the
+implemented time-dependent update tracks the analytic characteristic
+to within $1.7\%$ P95, whereas a static-velocity approximation fails
+when the field changes appreciably during flight. This is a controlled
+dynamic-velocity qualification, not evidence for performance in a
+measured turbulent wind field.
 
 % ---------------------------------------------------------------------
 \subsection{Scale transfer}

@@ -156,24 +156,36 @@ def build_static_fields(mask, dx, dy, dz):
 def step_kernel(carry, n, c2_xy, c2_z, u, v, w, ax_f, ay_f, az_f,
                 one_minus_damp, free, dx, dy, dz,
                 dt=DT, pulse_t0_steps=PULSE_T0_STEPS,
-                pulse_tau_steps=PULSE_TAU_STEPS, min_peak_amp=MIN_PEAK_AMP):
+                pulse_tau_steps=PULSE_TAU_STEPS, min_peak_amp=MIN_PEAK_AMP,
+                diffusivity=None):
     psi_prev, psi_curr, amp_prev, was_rising, T, src_spatial = carry
     t = n.astype(jnp.float32) * dt
     pulse_t0 = pulse_t0_steps * dt
     pulse_tau = pulse_tau_steps * dt
     dt2 = jnp.float32(dt * dt)
-    diff = (lap_var_coef_axis(c2_xy, psi_curr, dx, 0)
-            + lap_var_coef_axis(c2_xy, psi_curr, dy, 1)
-            + lap_var_coef_axis(c2_z, psi_curr, dz, 2))
+    wave_flux = (lap_var_coef_axis(c2_xy, psi_curr, dx, 0)
+                 + lap_var_coef_axis(c2_xy, psi_curr, dy, 1)
+                 + lap_var_coef_axis(c2_z, psi_curr, dz, 2))
     src = src_spatial * jnp.exp(-0.5 * ((t - pulse_t0) / pulse_tau) ** 2)
     psi_dot = (psi_curr - psi_prev) / dt
+    # Optional uncertainty-induced Kelvin--Voigt damping from the paper:
+    #     div(D_diff grad(d psi / dt)).
+    # ``None`` takes the original numerical path exactly; WaveConfig only
+    # allocates a coefficient field when a non-zero diffusivity is requested.
+    uncertainty_flux = 0.0
+    if diffusivity is not None:
+        uncertainty_flux = (
+            lap_var_coef_axis(diffusivity, psi_dot, dx, 0)
+            + lap_var_coef_axis(diffusivity, psi_dot, dy, 1)
+            + lap_var_coef_axis(diffusivity, psi_dot, dz, 2)
+        )
     adv1 = adv(u, v, w, psi_dot, dx, dy, dz)
     qg = adv(u, v, w, psi_curr, dx, dy, dz)
     adv2 = adv(u, v, w, qg, dx, dy, dz)
     adv_a = (ax_f*grad_central(psi_curr,0,dx)
              + ay_f*grad_central(psi_curr,1,dy)
              + az_f*grad_central(psi_curr,2,dz))
-    rhs = diff + src - 2.0*adv1 - adv2 - adv_a
+    rhs = wave_flux + uncertainty_flux + src - 2.0*adv1 - adv2 - adv_a
     psi_next = 2.0*psi_curr - psi_prev + dt2 * rhs
     psi_next = psi_next * one_minus_damp * free
     psi_next = psi_next.at[0, :, :].set(0.0)
@@ -205,12 +217,14 @@ def gaussian_source(shape, idx, sigma=SOURCE_SIGMA_CELLS):
 def solve_one(c2_xy, c2_z, u, v, w, ax_f, ay_f, az_f,
               one_minus_damp, free, src_spatial, dx, dy, dz, n_steps,
               dt=DT, pulse_t0_steps=PULSE_T0_STEPS,
-              pulse_tau_steps=PULSE_TAU_STEPS, min_peak_amp=MIN_PEAK_AMP):
+              pulse_tau_steps=PULSE_TAU_STEPS, min_peak_amp=MIN_PEAK_AMP,
+              diffusivity=None):
     """All-explicit-arg version: every dynamic dependency is a positional
     arg. Closures are avoided so the JIT cache hits across sources.
     Trailing time/pulse parameters default to the module constants, so
     existing positional call sites are numerically unchanged; wave_api.py
-    overrides them from a WaveConfig."""
+    overrides them from a WaveConfig. ``diffusivity`` is an optional spatial
+    field in m^2/s; ``None`` recovers the original equation exactly."""
     shape = src_spatial.shape
     init = (
         jnp.zeros(shape, dtype=jnp.float32),
@@ -224,7 +238,8 @@ def solve_one(c2_xy, c2_z, u, v, w, ax_f, ay_f, az_f,
         return step_kernel(carry, n, c2_xy, c2_z, u, v, w,
                            ax_f, ay_f, az_f, one_minus_damp, free,
                            dx, dy, dz,
-                           dt, pulse_t0_steps, pulse_tau_steps, min_peak_amp)
+                           dt, pulse_t0_steps, pulse_tau_steps, min_peak_amp,
+                           diffusivity)
     n_arr = jnp.arange(n_steps, dtype=jnp.int32)
     final, _ = lax.scan(step_fn, init, n_arr)
     return final[4]   # T field
